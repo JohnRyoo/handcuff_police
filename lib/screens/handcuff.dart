@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:police/screens/signup.dart';
-import 'package:police/screens/test.dart';
+
+import '../config/palette.dart';
 
 class HandcuffScreen extends StatefulWidget {
   const HandcuffScreen({Key? key}) : super(key: key);
@@ -14,166 +14,272 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
   late double _phoneWidth;
   late double _phoneHeight;
 
+  final _formKey = GlobalKey<FormState>();
+
+  String serialNumber = '';
+  String serialNumberConfirm = '';
+  TextEditingController serialNumberController = TextEditingController();
+  TextEditingController serialNumberConfirmController = TextEditingController();
+
+  void _validationCheck() {
+    final isValid = _formKey.currentState!.validate();
+    if (isValid) {
+      _formKey.currentState!.save();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    _phoneHeight = MediaQuery.of(context).size.height;
-    _phoneWidth = MediaQuery.of(context).size.width;
+    _phoneHeight = MediaQuery
+        .of(context)
+        .size
+        .height;
+    _phoneWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          Center(
-            child: Column(
-              // mainAxisAlignment: MainAxisAlignment.start,
-              // crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(
-                  height: 80,
-                ),
-                // 수갑 이미지
-                Container(
-                  height: 130,
-                  width: _phoneWidth - 40,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(25),
-                    color: const Color(0x19ffffff),
-                  ),
-                  child: Image.asset('images/handcuff.png'),
-                ),
-                const SizedBox(
-                  height: 80,
-                ),
-                // 수갑 번호
-                SizedBox(
-                  height: 60,
-                  width: _phoneWidth - 40,
-                  child: TextFormField(
-                    style: const TextStyle(color: Color(0xffa0a0a0)),
-                    decoration: const InputDecoration(
-                      filled: true,
-                      fillColor: Color(0x19ffffff),
-                      prefixIcon: Icon(
-                        Icons.numbers,
-                        color: Color(0xffa0a0a0),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        // borderSide: BorderSide(color: Color(0xffa0a0a0)),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(35.0),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        // borderSide: BorderSide(color: Color(0xffa0a0a0)),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(35.0),
-                        ),
-                      ),
-                      hintText: '수갑번호',
-                      hintStyle: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xffa0a0a0),
-                      ),
-                      // contentPadding: EdgeInsets.all(10.0),
+          // 수갑, 수갑번호, 수갑번호확인, 등록하기
+          Positioned(
+            child: SingleChildScrollView(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(
+                      height: 80,
                     ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                // 수갑 번호 확인
-                SizedBox(
-                  height: 60,
-                  width: _phoneWidth - 40,
-                  child: TextFormField(
-                    style: const TextStyle(color: Color(0xffa0a0a0)),
-                    decoration: const InputDecoration(
-                      filled: true,
-                      fillColor: Color(0x19ffffff),
-                      prefixIcon: Icon(
-                        Icons.check,
-                        color: Color(0xffa0a0a0),
+
+                    // 수갑 이미지
+                    Container(
+                      height: 130,
+                      width: _phoneWidth - 40,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(25),
+                        color: Palette.darkButtonColor,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        // borderSide: BorderSide(color: Color(0xffa0a0a0)),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(35.0),
+                      child: Image.asset('images/handcuff.png'),
+                    ),
+                    const SizedBox(
+                      height: 80,
+                    ),
+
+                    SizedBox(
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                            child: Form (
+                                key: _formKey,
+                                child: Column(
+                                    children: [
+                                      // 수갑 번호
+                                      TextFormField(
+                                        key: const ValueKey(1),
+                                        controller: serialNumberController,
+                                        keyboardType: TextInputType.text,
+                                        validator: (value) {
+                                          if (value!.isEmpty) {
+                                            return "수갑번호를 입력하세요.";
+                                          }
+                                          return null;
+                                        },
+                                        onSaved: (value) {
+                                          serialNumber = value!;
+                                        },
+                                        onChanged: (value) {
+                                          serialNumber = value;
+                                        },
+                                        style: const TextStyle(color: Palette.whiteTextColor),
+                                        decoration: const InputDecoration(
+                                          filled: true,
+                                          fillColor: Palette.darkButtonColor,
+                                          prefixIcon: Icon(
+                                            Icons.numbers,
+                                            color: Palette.whiteTextColor,
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(35.0),
+                                            ),
+                                          ),
+                                          errorBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(35.0),
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(35.0),
+                                            ),
+                                          ),
+                                          focusedErrorBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(35.0),
+                                            ),
+                                          ),
+                                          hintText: '수갑번호',
+                                          hintStyle: TextStyle(
+                                            fontSize: 14,
+                                            color: Palette.whiteTextColor,
+                                          ),
+                                          // contentPadding: EdgeInsets.all(10.0),
+                                        ),
+                                      ),
+
+                                      const SizedBox(
+                                        height: 10,
+                                      ),
+
+                                      // 수갑번호 확인
+                                      TextFormField(
+                                        key: const ValueKey(2),
+                                        controller: serialNumberConfirmController,
+                                        keyboardType: TextInputType.text,
+                                        validator: (value) {
+                                          if (value!.isEmpty) {
+                                            return "수갑번호 확인을 입력하세요.";
+                                          }
+
+                                          if (serialNumberController.text !=
+                                              serialNumberConfirmController.text) {
+                                            return "수갑번호가 일치하지 않습니다.";
+                                          }
+
+                                          return null;
+                                        },
+                                        onSaved: (value) {
+                                          serialNumberConfirm = value!;
+                                        },
+                                        onChanged: (value) {
+                                          serialNumberConfirm = value;
+                                        },
+                                        style: const TextStyle(color: Palette.whiteTextColor),
+                                        decoration: const InputDecoration(
+                                          filled: true,
+                                          fillColor: Palette.darkButtonColor,
+                                          prefixIcon: Icon(
+                                            Icons.check,
+                                            color: Palette.whiteTextColor,
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(35.0),
+                                            ),
+                                          ),
+                                          errorBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(35.0),
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(35.0),
+                                            ),
+                                          ),
+                                          focusedErrorBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(35.0),
+                                            ),
+                                          ),
+                                          hintText: '수갑번호확인',
+                                          hintStyle: TextStyle(
+                                            fontSize: 14,
+                                            color: Palette.whiteTextColor,
+                                          ),
+                                          // contentPadding: EdgeInsets.all(10.0),
+                                        ),
+                                      ),
+                                    ]
+                                ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 80,
+                    ),
+                    // 등록하기 버튼
+                    GestureDetector(
+                      onTap: () {
+                        if (_formKey.currentState!.validate()) {
+                          Navigator.pop(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('입력값을 확인해주세요d!'),
+                                backgroundColor: Colors.blue,
+                              ));
+                        }
+                      },
+                      child: Container(
+                        width: _phoneWidth - 40,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: const Color(0xff00e693),
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Center(
+                          child: Center(
+                            child: Text(
+                              '등록하기',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.notoSans(
+                                  textStyle: const TextStyle(
+                                    color: Color(0xff333333),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.4,
+                                  )),
+                            ),
+                          ),
                         ),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        // borderSide: BorderSide(color: Color(0xffa0a0a0)),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(35.0),
-                        ),
-                      ),
-                      hintText: '수갑번호확인',
-                      hintStyle: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xffa0a0a0),
-                      ),
-                      // contentPadding: EdgeInsets.all(10.0),
                     ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 80,
-                ),
-                // 등록하기 버튼
-                GestureDetector(
-                  onTap: () {
-                    // Navigator.push(context,
-                    //     MaterialPageRoute(builder: (context) {
-                    //       return const ScreenTest();
-                    //     }));
-                    Navigator.pop(context);
-                  },
-                  child: Container(
-                    width: _phoneWidth - 40,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: const Color(0xff00e693),
-                      borderRadius: BorderRadius.circular(25),
+                    const SizedBox(
+                      height: 20,
                     ),
-                    child: Center(
-                      child: Center(
-                        child: Text(
-                          '등록하기',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.notoSans(
-                              textStyle: const TextStyle(
-                                color: Color(0xff333333),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                height: 1.4,
-                              )),
-                        ),
-                      ),
-                    ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Center(
-                child: Text(
-                  'Copyright © TERRAONE Corp. All Rights Reserved.',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.notoSans(
-                      textStyle: const TextStyle(
-                        color: Color(0xffa0a0a0),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        height: 1.4,
-                      )),
+
+          // copyright
+          Positioned(
+            top: 0,
+            child: SizedBox(
+              width: _phoneWidth,
+              height: _phoneHeight,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Center(
+                      child: Text(
+                        'Copyright © TERRAONE Corp. All Rights Reserved.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.notoSans(
+                            textStyle: const TextStyle(
+                              color: Color(0xffa0a0a0),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              height: 1.4,
+                            )),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(
-                height: 10,
-              ),
-            ],
+            ),
           ),
         ],
       ),
