@@ -76,6 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         key: _formKey,
                         child: Column(
                           children: [
+                            // 아이디
                             TextFormField(
                               key: const ValueKey(1),
                               validator: (value) {
@@ -129,9 +130,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             ),
+
                             const SizedBox(
                               height: 10,
                             ),
+                            // 비밀 번호
                             TextFormField(
                               key: const ValueKey(2),
                               obscureText: true,
@@ -284,7 +287,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
 
               const SizedBox(
-                height: 170,
+                height: 200,
               ),
 
               // Copyright
