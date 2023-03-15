@@ -26,7 +26,7 @@ class _MainPageScreenState extends State<MainPageScreen> {
   GpsStatus gpsStatus = GpsStatus.connected; // 수갑 연결 후 GPS 연결
 
   RssiType rssiType = RssiType.high;
-  HandcuffStatus handcuffStatus = HandcuffStatus.runAway;
+  HandcuffStatus handcuffStatus = HandcuffStatus.normal;
 
   @override
   Widget build(BuildContext context) {
