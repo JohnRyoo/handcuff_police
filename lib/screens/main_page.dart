@@ -62,27 +62,45 @@ class _MainPageScreenState extends State<MainPageScreen> {
                 Icons.menu,
                 color: Palette.whiteTextColor,
               ),
-              color: Palette.darkButtonColor,
+              color: Palette.lightButtonColor,
               onSelected: (item) => _selectedActionMenuItem(context, item),
               itemBuilder: (context) => [
-                    const PopupMenuItem<HandcuffMenu>(
+                    PopupMenuItem<HandcuffMenu>(
                       value: HandcuffMenu.deleteHandcuff,
                       child: Text(
                         "수갑 삭제",
-                        style: TextStyle(color: Palette.whiteTextColor),
+                        style: GoogleFonts.notoSans(
+                          textStyle: const TextStyle(
+                            color: Palette.darkTextColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
-                    const PopupMenuItem<HandcuffMenu>(
+                    PopupMenuItem<HandcuffMenu>(
                         value: HandcuffMenu.logout,
                         child: Text(
                           "로그아웃",
-                          style: TextStyle(color: Palette.whiteTextColor),
+                          style: GoogleFonts.notoSans(
+                            textStyle: const TextStyle(
+                              color: Palette.darkTextColor,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         )),
-                    const PopupMenuItem<HandcuffMenu>(
+                    PopupMenuItem<HandcuffMenu>(
                         value: HandcuffMenu.exit,
                         child: Text(
                           "앱 종료",
-                          style: TextStyle(color: Palette.whiteTextColor),
+                          style: GoogleFonts.notoSans(
+                            textStyle: const TextStyle(
+                              color: Palette.darkTextColor,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ))
                   ]),
         ],
