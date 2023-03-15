@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 userId = value;
                               },
                               style: const TextStyle(
-                                  color: Palette.darkButtonColor),
+                                  color: Palette.whiteTextColor),
                               decoration: const InputDecoration(
                                 filled: true,
                                 fillColor: Palette.darkButtonColor,
@@ -148,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 userPassword = value;
                               },
                               style: const TextStyle(
-                                  color: Palette.darkButtonColor),
+                                  color: Palette.whiteTextColor),
                               decoration: const InputDecoration(
                                 filled: true,
                                 fillColor: Palette.darkButtonColor,
@@ -284,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
 
               const SizedBox(
-                height: 150,
+                height: 170,
               ),
 
               // Copyright
