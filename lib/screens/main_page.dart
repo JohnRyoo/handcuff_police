@@ -193,7 +193,7 @@ class _MainPageScreenState extends State<MainPageScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'empty..',
+                        'empty',
                         style: GoogleFonts.notoSans(
                           textStyle: const TextStyle(
                             color: Color(0xffa0a0a0),
@@ -444,8 +444,8 @@ class _MainPageScreenState extends State<MainPageScreen> {
       msg: toastMessage,
       gravity: ToastGravity.BOTTOM,
       backgroundColor: Palette.lightButtonColor,
-      fontSize: 20,
-      textColor: Palette.lightTextColor,
+      fontSize: 16,
+      textColor: Palette.darkTextColor,
       toastLength: Toast.LENGTH_SHORT,
     );
   }
