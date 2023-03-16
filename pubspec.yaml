@@ -38,6 +38,11 @@ dependencies:
   cupertino_icons: ^1.0.2
   google_fonts: ^4.0.3
   fluttertoast: ^8.2.1
+  provider: ^6.0.5
+  mqtt_client: ^9.8.0
+  geolocator: ^9.0.2
+  google_maps_flutter: ^2.2.5
+  wakelock: ^0.6.2
 
 dev_dependencies:
   flutter_test:
@@ -93,4 +98,3 @@ flutter:
   # see https://flutter.dev/custom-fonts/#from-packages
   assets:
     - images/
-

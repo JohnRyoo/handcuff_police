@@ -1,7 +1,6 @@
-import 'package:chat_lecture/mqtt/state/MQTTAppState.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import '../mqtt/state/MQTTAppState.dart';
 import 'map_screen.dart';
 
 class HandcuffOnMapByMqtt extends StatelessWidget {
@@ -16,7 +15,7 @@ class HandcuffOnMapByMqtt extends StatelessWidget {
         ),
         home: ChangeNotifierProvider<MQTTAppState> (
           create: (_) => MQTTAppState(),
-          child:HandcuffOnMap(),
+          child: const HandcuffOnMap(),
         )
     );
   }
