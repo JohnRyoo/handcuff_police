@@ -250,17 +250,17 @@ class _LoginScreenState extends State<LoginScreen> {
                               }),
                             );
                           } else {
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(
-                              content: Text(
-                                '입력값을 확인해주세요!',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.black,
-                                ),
-                              ),
-                              backgroundColor: Colors.blue,
-                            ));
+                            // ScaffoldMessenger.of(context)
+                            //     .showSnackBar(const SnackBar(
+                            //   content: Text(
+                            //     '입력값을 확인해주세요!',
+                            //     textAlign: TextAlign.center,
+                            //     style: TextStyle(
+                            //       color: Colors.black,
+                            //     ),
+                            //   ),
+                            //   backgroundColor: Colors.blue,
+                            // ));
                           }
                         },
                         child: Container(
