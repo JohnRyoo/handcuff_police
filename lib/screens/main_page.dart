@@ -6,6 +6,7 @@ import 'package:police/config/palette.dart';
 
 import 'handcuff.dart';
 import 'login.dart';
+import 'mqtt_screen.dart';
 
 enum HandcuffMenu { deleteHandcuff, logout, exit }
 
@@ -48,9 +49,14 @@ class _MainPageScreenState extends State<MainPageScreen> {
       backgroundColor: Palette.backgroundColor,
       appBar: AppBar(
         backgroundColor: Palette.backgroundColor,
-        iconTheme: const IconThemeData(
-          color: Palette.whiteTextColor,
-        ),
+        // 메인화면은 로그인 화면이 제거된 후 생성되므로 돌아갈 곳이 없음
+        // leading: IconButton(
+        //   onPressed: () {
+        //     Navigator.pop(context);
+        //   },
+        //   icon: const Icon(Icons.arrow_back_ios),
+        //   color: Palette.whiteTextColor,
+        // ),
         centerTitle: true,
         title: Text(
           userId,
@@ -65,6 +71,7 @@ class _MainPageScreenState extends State<MainPageScreen> {
               color: Palette.lightButtonColor,
               onSelected: (item) => _selectedActionMenuItem(context, item),
               itemBuilder: (context) => [
+                  if (isHandcuffRegistered)
                     PopupMenuItem<HandcuffMenu>(
                       value: HandcuffMenu.deleteHandcuff,
                       child: Text(
@@ -260,21 +267,36 @@ class _MainPageScreenState extends State<MainPageScreen> {
                               ),
                             ),
                           ),
-                          Text(
-                            !isHandcuffConnected ||
-                                    gpsStatus == GpsStatus.disconnected
-                                ? '마지막 위치'
-                                : gpsStatus == GpsStatus.connected
-                                    ? '위치확인'
-                                    : '위치확인중...',
-                            style: GoogleFonts.notoSans(
-                              textStyle: TextStyle(
-                                color: isHandcuffConnected
-                                    ? Palette.darkTextColor
-                                    : Palette.whiteTextColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                height: 1.4,
+                          TextButton(
+                            onPressed: () {
+                              if (!isHandcuffConnected ||
+                                  gpsStatus == GpsStatus.disconnected) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) {
+                                      return const HandcuffOnMapByMqtt();
+                                    },
+                                  ),
+                                );
+                              }
+                            },
+                            child: Text(
+                              !isHandcuffConnected ||
+                                      gpsStatus == GpsStatus.disconnected
+                                  ? '마지막 위치'
+                                  : gpsStatus == GpsStatus.connected
+                                      ? '위치확인'
+                                      : '위치확인중...',
+                              style: GoogleFonts.notoSans(
+                                textStyle: TextStyle(
+                                  color: isHandcuffConnected
+                                      ? Palette.darkTextColor
+                                      : Palette.whiteTextColor,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.4,
+                                ),
                               ),
                             ),
                           ),

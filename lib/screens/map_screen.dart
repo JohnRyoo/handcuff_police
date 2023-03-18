@@ -7,16 +7,26 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 
 import 'package:provider/provider.dart';
+import '../config/palette.dart';
 import '../mqtt/MQTTManager.dart';
 import '../mqtt/state/MQTTAppState.dart';
 import 'package:wakelock/wakelock.dart';
 
+import 'login.dart';
+
 enum SmartMenu { handcuffLocation, myPosition, logout }
+
+enum HandcuffMenu { deleteHandcuff, logout, exit }
+enum BatteryLevel { high, middle, low }
+enum HandcuffStatus { normal, runAway }
+enum GpsStatus { disconnected, connecting, connected }
+
 
 class HandcuffOnMap extends StatefulWidget {
   const HandcuffOnMap({Key? key}) : super(key: key);
@@ -78,6 +88,14 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
   // 수갑 위치
   late LatLng _currentHandcuffLocation;
 
+  bool isHandcuffConnected = true; // 수갑과의 연결 여부
+  BatteryLevel batteryLevel = BatteryLevel.middle;
+  HandcuffStatus handcuffStatus = HandcuffStatus.runAway;
+  GpsStatus gpsStatus = GpsStatus.disconnected; // 수갑 연결 후 GPS 연결
+
+  late double _phoneWidth;
+  late double _phoneHeight;
+
   @override
   void initState() {
     // 수행 중 화면이 꺼지지 않도록 설정
@@ -98,6 +116,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
 
     positionStream?.cancel();
   }
+
+  String userId = 'ID_0001';
 
   void _determineCurrentPosition() async {
     // Test if location services are enabled.
@@ -200,9 +220,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
     print(
         "============= ======================== =========================== " +
             currentAppState.getLatitude.toString());
-    print(
-        "============= ======================== ===================== " +
-            currentAppState.getLongitude.toString());
+    print("============= ======================== ===================== " +
+        currentAppState.getLongitude.toString());
     _currentHandcuffLocation =
         LatLng(currentAppState.getLatitude, currentAppState.getLongitude);
     if (currentAppState.getAppConnectionState ==
@@ -210,47 +229,61 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
       addMarker(_currentHandcuffLocation);
     }
 
+    _phoneHeight = MediaQuery.of(context).size.height;
+    _phoneWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       appBar: AppBar(
-          title: const Text('스마트 경찰수갑 위치'),
-          backgroundColor: Colors.blue,
-          actions: [
-            PopupMenuButton(
-              color: Colors.white,
-              onSelected: (item) => SelectedActionMenuItem(context, item),
-              itemBuilder: (context) => [
-                PopupMenuItem<SmartMenu>(
-                  value: SmartMenu.handcuffLocation,
-                  child: Text(
-                    "수갑 위치 받기",
-                    style: TextStyle(color: Colors.black),
-                  ),
-                ),
-                PopupMenuItem<SmartMenu>(
-                  value: SmartMenu.myPosition,
-                  child: Text(
-                    "내 위치 보내기",
-                    style: TextStyle(color: Colors.black),
-                  ),
-                ),
-                // PopupMenuDivider(),
-                PopupMenuItem<SmartMenu>(
-                    value: SmartMenu.logout,
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.logout,
-                          color: Colors.red,
+        backgroundColor: Colors.black,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back_ios),
+          color: Palette.whiteTextColor,
+        ),
+        centerTitle: true,
+        title: Text(
+          userId,
+          style: const TextStyle(color: Palette.whiteTextColor),
+        ),
+        actions: [
+          PopupMenuButton(
+              icon: const Icon(
+                Icons.menu,
+                color: Palette.whiteTextColor,
+              ),
+              color: Palette.lightButtonColor,
+              onSelected: (item) => _selectedActionMenuItem(context, item),
+              itemBuilder: (context) =>
+              [
+                PopupMenuItem<HandcuffMenu>(
+                    value: HandcuffMenu.logout,
+                    child: Text(
+                      "로그아웃",
+                      style: GoogleFonts.notoSans(
+                        textStyle: const TextStyle(
+                          color: Palette.darkTextColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(
-                          width: 20,
-                        ),
-                        Text("Logout"),
-                      ],
+                      ),
                     )),
-              ],
-            ),
-          ]),
+                PopupMenuItem<HandcuffMenu>(
+                    value: HandcuffMenu.exit,
+                    child: Text(
+                      "앱 종료",
+                      style: GoogleFonts.notoSans(
+                        textStyle: const TextStyle(
+                          color: Palette.darkTextColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ))
+              ]),
+        ],
+      ),
       body: Stack(
         children: [
           GoogleMap(
@@ -270,82 +303,134 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
               _displayPositionOnTab(cordinate);
             },
           ),
-          Container(
-            // width: 100,
-            height: 60,
-            margin: EdgeInsets.symmetric(horizontal: 20.0),
-            decoration: BoxDecoration(
-              color: Colors.orange,
-              borderRadius: BorderRadius.circular(7.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 15,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Text(
-                      (_currentPosition != null)
-                          ? "나의 위치:  위도 ${_currentPosition!.latitude
-                          .toStringAsPrecision(6)}  경도 ${_currentPosition!.longitude.toStringAsPrecision(6)}"
-                          : "나의 위치: 찾고 있는 중입니다...",
-                      style: TextStyle(
-                        fontSize: 14,
-                        // fontWeight: FontWeight.bold,
-                        color: Colors.black,
+
+          // ON, 상, 마지막 위치 표시
+          Positioned(
+            top: 20,
+            child: Container(
+              width: _phoneWidth - 40,
+              height: 60,
+              margin: const EdgeInsets.symmetric(horizontal: 20.0),
+              // decoration: BoxDecoration(
+              //   color: Colors.orange,
+              //   borderRadius: BorderRadius.circular(7.0),
+              //   boxShadow: [
+              //     BoxShadow(
+              //       color: Colors.black.withOpacity(0.3),
+              //       blurRadius: 15,
+              //       spreadRadius: 5,
+              //     ),
+              //   ],
+              // ),
+              decoration: BoxDecoration(
+                color: (handcuffStatus == HandcuffStatus.runAway)
+                    ? Palette.emergencyColor
+                    : Palette.lightButtonColor,
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Text(
+                    isHandcuffConnected ? 'ON' : 'OFF',
+                    style: GoogleFonts.notoSans(
+                      textStyle: TextStyle(
+                        color: isHandcuffConnected
+                            ? Palette.darkTextColor
+                            : Palette.whiteTextColor,
+                        fontSize: 36,
+                        fontWeight: FontWeight.w800,
+                        height: 1.4,
                       ),
                     ),
-                    Text(
-                      (_currentHandcuffLocation != null)
-                          ? "수갑 위치:  위도 ${_currentHandcuffLocation.latitude.toStringAsPrecision(6)}  경도 ${_currentHandcuffLocation.longitude
-                          .toStringAsPrecision(6)}"
-                          : "수갑 위치: 찾고 있는 중입니다...",
-                      style: TextStyle(
-                        fontSize: 14,
-                        // fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                  ),
+                  Text(
+                    !isHandcuffConnected
+                        ? '-'
+                        : batteryLevel == BatteryLevel.high
+                        ? '상 '
+                        : batteryLevel == BatteryLevel.middle
+                        ? '중'
+                        : batteryLevel == BatteryLevel.low
+                        ? '하'
+                        : '-',
+                    style: GoogleFonts.notoSans(
+                      textStyle: TextStyle(
+                        color: isHandcuffConnected
+                            ? Palette.darkTextColor
+                            : Palette.whiteTextColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        height: 1.4,
                       ),
                     ),
-                  ],
-                ),
-                Text(
-                  "" + _distanceBetweenMeAndHandcuff() + " m",
-                  style: TextStyle(
-                      letterSpacing: 1.0, color: Colors.white, fontSize: 20),
-                ),
-              ],
+                  ),
+                  TextButton(
+                    onPressed: () {
+                    },
+                    child: Text(
+                      !isHandcuffConnected ||
+                          gpsStatus == GpsStatus.disconnected
+                          ? '마지막 위치'
+                          : gpsStatus == GpsStatus.connected
+                          ? '위치확인'
+                          : '위치확인중...',
+                      style: GoogleFonts.notoSans(
+                        textStyle: TextStyle(
+                          color: isHandcuffConnected
+                              ? Palette.darkTextColor
+                              : Palette.whiteTextColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
+
       floatingActionButton: Stack(
         children: <Widget>[
           Align(
             alignment:
-            Alignment(Alignment.bottomLeft.x + 0.2, Alignment.bottomLeft.y),
+            Alignment(Alignment.bottomLeft.x + 0.4, Alignment.bottomLeft.y - 0.02),
             child: FloatingActionButton(
               heroTag: "btn1",
               // onPressed: listenToLocationChanges,
               onPressed: _displayMyPosition,
               tooltip: '나의 위치로 가기',
-              child: const Icon(Icons.add_location),
+              backgroundColor: Colors.black,
+              // child: const Icon(Icons.add_location, color: Colors.white,),
+              child: const Text("ME", style: TextStyle(color: Colors.white, fontSize: 16),),
             ),
           ),
+
           Align(
-            alignment: Alignment.bottomRight,
+            alignment:
+              Alignment(Alignment.center.x, Alignment.bottomCenter.y - 0.02),
             child: FloatingActionButton(
               heroTag: "btn2",
               onPressed: _displayHandcuffPosition,
+              tooltip: '수갑 알람 울리기',
+              // child: const Icon(Icons.handshake),
+              backgroundColor: Colors.black,
+              child: const Icon(Icons.alarm_on, color: Colors.white,),
+            ),
+          ),
+
+          Align(
+            alignment: Alignment(Alignment.bottomRight.x -0.4, Alignment.bottomRight.y - 0.02),
+            child: FloatingActionButton(
+              heroTag: "btn3",
+              onPressed: _displayHandcuffPosition,
               tooltip: '수갑 위치로 가기',
-              child: const Icon(Icons.handshake),
+              backgroundColor: Colors.black,
+              child: const Text("ON", style: TextStyle(color: Colors.white, fontSize: 16),),
             ),
           )
         ],
@@ -502,7 +587,6 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
   }
 
   void _publishJsonLocation() {
-
     String publishingText = '''
     {
       "message" : {
@@ -511,7 +595,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
         "longitude" : ${_currentPosition!.longitude.toString()}
        }
     }''';
-    print('============================ ============> publishingText = $publishingText');
+    print(
+        '============================ ============> publishingText = $publishingText');
     manager.publish(publishingText);
   }
 
@@ -520,12 +605,89 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
         ' ' +
         _currentPosition!.longitude.toString();
 
-    print('============================ ============> publishingText = $publishingText');
+    print(
+        '============================ ============> publishingText = $publishingText');
     manager.publish(publishingText);
   }
 
   void _publishMessage(String text) {
     manager.publish(text);
+  }
+
+  void _selectedActionMenuItem(BuildContext context, item) {
+    switch (item) {
+      case HandcuffMenu.logout:
+      // 모든 페이지를 제거 후 지정한 페이지를 push
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false);
+        break;
+      case HandcuffMenu.exit:
+        _exitApp();
+    }
+  }
+
+  Future _exitApp() async {
+    return await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Palette.lightButtonColor,
+            title: Text(
+              '종료하시겠습니까?',
+              style: GoogleFonts.notoSans(
+                textStyle: const TextStyle(
+                  color: Palette.darkTextColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  //아래 함수를 이용해서 앱을 종료 할 수 있다.
+                  SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+                },
+                child: Text(
+                  '끝내기',
+                  style: GoogleFonts.notoSans(
+                    textStyle: const TextStyle(
+                      color: Palette.darkTextColor,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  '아니요',
+                  style: GoogleFonts.notoSans(
+                    textStyle: const TextStyle(
+                      color: Palette.darkTextColor,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        });
+  }
+
+  void _showToast(String toastMessage) {
+    Fluttertoast.showToast(
+      msg: toastMessage,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Palette.lightButtonColor,
+      fontSize: 16,
+      textColor: Palette.darkTextColor,
+      toastLength: Toast.LENGTH_SHORT,
+    );
   }
 }
 

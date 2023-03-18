@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../config/palette.dart';
+import 'login.dart';
+
+enum HandcuffMenu { deleteHandcuff, logout, exit }
 
 class HandcuffScreen extends StatefulWidget {
   const HandcuffScreen({Key? key}) : super(key: key);
@@ -21,6 +26,8 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
   TextEditingController serialNumberController = TextEditingController();
   TextEditingController serialNumberConfirmController = TextEditingController();
 
+  String userId = 'ID_0001';
+
   late double originalHeight;
 
   void _validationCheck() {
@@ -37,6 +44,60 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
 
     return Scaffold(
       backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Palette.backgroundColor,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back_ios),
+          color: Palette.whiteTextColor,
+        ),
+        // iconTheme: const IconThemeData(
+        //   color: Palette.whiteTextColor,
+        // ),
+        centerTitle: true,
+        title: Text(
+          userId,
+          style: const TextStyle(color: Palette.whiteTextColor),
+        ),
+        actions: [
+          PopupMenuButton(
+              icon: const Icon(
+                Icons.menu,
+                color: Palette.whiteTextColor,
+              ),
+              color: Palette.lightButtonColor,
+              onSelected: (item) => _selectedActionMenuItem(context, item),
+              itemBuilder: (context) => [
+                PopupMenuItem<HandcuffMenu>(
+                    value: HandcuffMenu.logout,
+                    child: Text(
+                      "로그아웃",
+                      style: GoogleFonts.notoSans(
+                        textStyle: const TextStyle(
+                          color: Palette.darkTextColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    )),
+                PopupMenuItem<HandcuffMenu>(
+                    value: HandcuffMenu.exit,
+                    child: Text(
+                      "앱 종료",
+                      style: GoogleFonts.notoSans(
+                        textStyle: const TextStyle(
+                          color: Palette.darkTextColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ))
+              ]),
+        ],
+      ),
+
       // resizeToAvoidBottomInset: false,
       body: GestureDetector(
         onTap: () {
@@ -291,6 +352,83 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
           ],
         ),
       ),
+    );
+  }
+
+
+  void _selectedActionMenuItem(BuildContext context, item) {
+    switch (item) {
+      case HandcuffMenu.logout:
+      // 모든 페이지를 제거 후 지정한 페이지를 push
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false);
+        break;
+      case HandcuffMenu.exit:
+        _exitApp();
+    }
+  }
+
+  Future _exitApp() async {
+    return await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Palette.lightButtonColor,
+            title: Text(
+              '종료하시겠습니까?',
+              style: GoogleFonts.notoSans(
+                textStyle: const TextStyle(
+                  color: Palette.darkTextColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  //아래 함수를 이용해서 앱을 종료 할 수 있다.
+                  SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+                },
+                child: Text(
+                  '끝내기',
+                  style: GoogleFonts.notoSans(
+                    textStyle: const TextStyle(
+                      color: Palette.darkTextColor,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  '아니요',
+                  style: GoogleFonts.notoSans(
+                    textStyle: const TextStyle(
+                      color: Palette.darkTextColor,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        });
+  }
+
+  void _showToast(String toastMessage) {
+    Fluttertoast.showToast(
+      msg: toastMessage,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Palette.lightButtonColor,
+      fontSize: 16,
+      textColor: Palette.darkTextColor,
+      toastLength: Toast.LENGTH_SHORT,
     );
   }
 }
