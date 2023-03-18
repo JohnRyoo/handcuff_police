@@ -368,21 +368,26 @@ class _MainPageScreenState extends State<MainPageScreen> {
                 ),
               if (isHandcuffRegistered)
                 SizedBox(
-                  child: Container(
-                    padding: const EdgeInsets.all(0),
-                    height: 60,
-                    width: 60,
-                    decoration: BoxDecoration(
-                      color: Palette.darkButtonColor,
-                      borderRadius: BorderRadius.circular(50),
-                    ),
+                  child: GestureDetector(
+                    onTap: () {
+                      _deleteHandcuff();
+                    },
                     child: Container(
+                      padding: const EdgeInsets.all(0),
+                      height: 60,
+                      width: 60,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
+                        color: Palette.darkButtonColor,
+                        borderRadius: BorderRadius.circular(50),
                       ),
-                      child: const Icon(
-                        Icons.clear,
-                        color: Palette.darkTextColor,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: const Icon(
+                          Icons.clear,
+                          color: Palette.darkTextColor,
+                        ),
                       ),
                     ),
                   ),
@@ -414,6 +419,60 @@ class _MainPageScreenState extends State<MainPageScreen> {
       case HandcuffMenu.exit:
         _exitApp();
     }
+  }
+
+  Future _deleteHandcuff() async {
+    return await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Palette.lightButtonColor,
+          title: Text(
+            '등록된 수갑을 삭제하시겠습니까?',
+            style: GoogleFonts.notoSans(
+              textStyle: const TextStyle(
+                color: Palette.darkTextColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  isHandcuffRegistered = false;
+                });
+                Navigator.pop(context);
+              },
+              child: Text(
+                '삭제',
+                style: GoogleFonts.notoSans(
+                  textStyle: const TextStyle(
+                    color: Palette.darkTextColor,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                '취소',
+                style: GoogleFonts.notoSans(
+                  textStyle: const TextStyle(
+                    color: Palette.darkTextColor,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future _exitApp() async {
