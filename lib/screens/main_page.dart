@@ -63,53 +63,59 @@ class _MainPageScreenState extends State<MainPageScreen> {
           style: const TextStyle(color: Palette.whiteTextColor),
         ),
         actions: [
-          PopupMenuButton(
-              icon: const Icon(
-                Icons.menu,
-                color: Palette.whiteTextColor,
-              ),
-              color: Palette.lightButtonColor,
-              onSelected: (item) => _selectedActionMenuItem(context, item),
-              itemBuilder: (context) => [
-                  if (isHandcuffRegistered)
-                    PopupMenuItem<HandcuffMenu>(
-                      value: HandcuffMenu.deleteHandcuff,
-                      child: Text(
-                        "수갑 삭제",
-                        style: GoogleFonts.notoSans(
-                          textStyle: const TextStyle(
-                            color: Palette.darkTextColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    PopupMenuItem<HandcuffMenu>(
-                        value: HandcuffMenu.logout,
-                        child: Text(
-                          "로그아웃",
-                          style: GoogleFonts.notoSans(
-                            textStyle: const TextStyle(
-                              color: Palette.darkTextColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        )),
-                    PopupMenuItem<HandcuffMenu>(
-                        value: HandcuffMenu.exit,
-                        child: Text(
-                          "앱 종료",
-                          style: GoogleFonts.notoSans(
-                            textStyle: const TextStyle(
-                              color: Palette.darkTextColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ))
-                  ]),
+          IconButton(
+            onPressed: () {
+              _exitApp();
+            },
+            icon: const Icon(Icons.exit_to_app),
+          ),
+          // PopupMenuButton(
+          //     icon: const Icon(
+          //       Icons.menu,
+          //       color: Palette.whiteTextColor,
+          //     ),
+          //     color: Palette.lightButtonColor,
+          //     onSelected: (item) => _selectedActionMenuItem(context, item),
+          //     itemBuilder: (context) => [
+          //         if (isHandcuffRegistered)
+          //           PopupMenuItem<HandcuffMenu>(
+          //             value: HandcuffMenu.deleteHandcuff,
+          //             child: Text(
+          //               "수갑 삭제",
+          //               style: GoogleFonts.notoSans(
+          //                 textStyle: const TextStyle(
+          //                   color: Palette.darkTextColor,
+          //                   fontSize: 16,
+          //                   fontWeight: FontWeight.w600,
+          //                 ),
+          //               ),
+          //             ),
+          //           ),
+          //           PopupMenuItem<HandcuffMenu>(
+          //               value: HandcuffMenu.logout,
+          //               child: Text(
+          //                 "로그아웃",
+          //                 style: GoogleFonts.notoSans(
+          //                   textStyle: const TextStyle(
+          //                     color: Palette.darkTextColor,
+          //                     fontSize: 16,
+          //                     fontWeight: FontWeight.w600,
+          //                   ),
+          //                 ),
+          //               )),
+          //           PopupMenuItem<HandcuffMenu>(
+          //               value: HandcuffMenu.exit,
+          //               child: Text(
+          //                 "앱 종료",
+          //                 style: GoogleFonts.notoSans(
+          //                   textStyle: const TextStyle(
+          //                     color: Palette.darkTextColor,
+          //                     fontSize: 16,
+          //                     fontWeight: FontWeight.w600,
+          //                   ),
+          //                 ),
+          //               ))
+          //         ]),
         ],
       ),
       body: Container(
