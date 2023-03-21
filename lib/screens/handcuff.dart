@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../config/palette.dart';
+import '../service/handcuffInfo.dart';
 import 'login.dart';
-
-enum HandcuffMenu { deleteHandcuff, logout, exit }
 
 class HandcuffScreen extends StatefulWidget {
   const HandcuffScreen({Key? key}) : super(key: key);
@@ -310,6 +310,7 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
                       GestureDetector(
                         onTap: () {
                           if (_formKey.currentState!.validate()) {
+                            context.read<HandcuffInfo>().isHandcuffRegistered = true;
                             Navigator.pop(context);
                           } else {
                             // ScaffoldMessenger.of(context)

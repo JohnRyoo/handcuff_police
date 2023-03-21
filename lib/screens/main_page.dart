@@ -3,18 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:police/config/palette.dart';
+import 'package:police/screens/component/main/handcuff_add.dart';
+import 'package:police/screens/component/main/main_page_status.dart';
+import 'package:provider/provider.dart';
 
+import '../service/handcuffInfo.dart';
 import 'handcuff.dart';
 import 'login.dart';
 import 'mqtt_screen.dart';
-
-enum HandcuffMenu { deleteHandcuff, logout, exit }
-
-enum BatteryLevel { high, middle, low }
-
-enum GpsStatus { disconnected, connecting, connected }
-
-enum HandcuffStatus { normal, runAway }
 
 class MainPageScreen extends StatefulWidget {
   const MainPageScreen({Key? key}) : super(key: key);
@@ -27,12 +23,12 @@ class _MainPageScreenState extends State<MainPageScreen> {
   late double _phoneWidth;
   late double _phoneHeight;
 
-  bool isHandcuffRegistered = true; // 수갑 등록 여부
-  bool isHandcuffConnected = true; // 수갑 등록 후 수갑과의 연결 여부
-  GpsStatus gpsStatus = GpsStatus.disconnected; // 수갑 연결 후 GPS 연결
-
-  BatteryLevel batteryLevel = BatteryLevel.high;
-  HandcuffStatus handcuffStatus = HandcuffStatus.normal;
+  // bool isHandcuffRegistered = true; // 수갑 등록 여부
+  // bool isHandcuffConnected = true; // 수갑 등록 후 수갑과의 연결 여부
+  // GpsStatus gpsStatus = GpsStatus.disconnected; // 수갑 연결 후 GPS 연결
+  //
+  // BatteryLevel batteryLevel = BatteryLevel.high;
+  // HandcuffStatus handcuffStatus = HandcuffStatus.normal;
 
   @override
   Widget build(BuildContext context) {
@@ -65,57 +61,10 @@ class _MainPageScreenState extends State<MainPageScreen> {
         actions: [
           IconButton(
             onPressed: () {
-              _exitApp();
+              // _exitApp();
             },
             icon: const Icon(Icons.exit_to_app),
           ),
-          // PopupMenuButton(
-          //     icon: const Icon(
-          //       Icons.menu,
-          //       color: Palette.whiteTextColor,
-          //     ),
-          //     color: Palette.lightButtonColor,
-          //     onSelected: (item) => _selectedActionMenuItem(context, item),
-          //     itemBuilder: (context) => [
-          //         if (isHandcuffRegistered)
-          //           PopupMenuItem<HandcuffMenu>(
-          //             value: HandcuffMenu.deleteHandcuff,
-          //             child: Text(
-          //               "수갑 삭제",
-          //               style: GoogleFonts.notoSans(
-          //                 textStyle: const TextStyle(
-          //                   color: Palette.darkTextColor,
-          //                   fontSize: 16,
-          //                   fontWeight: FontWeight.w600,
-          //                 ),
-          //               ),
-          //             ),
-          //           ),
-          //           PopupMenuItem<HandcuffMenu>(
-          //               value: HandcuffMenu.logout,
-          //               child: Text(
-          //                 "로그아웃",
-          //                 style: GoogleFonts.notoSans(
-          //                   textStyle: const TextStyle(
-          //                     color: Palette.darkTextColor,
-          //                     fontSize: 16,
-          //                     fontWeight: FontWeight.w600,
-          //                   ),
-          //                 ),
-          //               )),
-          //           PopupMenuItem<HandcuffMenu>(
-          //               value: HandcuffMenu.exit,
-          //               child: Text(
-          //                 "앱 종료",
-          //                 style: GoogleFonts.notoSans(
-          //                   textStyle: const TextStyle(
-          //                     color: Palette.darkTextColor,
-          //                     fontSize: 16,
-          //                     fontWeight: FontWeight.w600,
-          //                   ),
-          //                 ),
-          //               ))
-          //         ]),
         ],
       ),
       body: Container(
@@ -192,233 +141,17 @@ class _MainPageScreenState extends State<MainPageScreen> {
               const SizedBox(
                 height: 70,
               ),
-              // 수갑 박스
-              // 수갑이 등록되지 않은 상태의 화면
-              if (!isHandcuffRegistered)
-                Container(
-                  width: _phoneWidth - 30,
-                  height: 400,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(25),
-                    border: Border.all(color: const Color(0xffa0a0a0)),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'empty',
-                        style: GoogleFonts.notoSans(
-                          textStyle: const TextStyle(
-                            color: Color(0xffa0a0a0),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              // 수갑이 등록된 화면
-              if (isHandcuffRegistered)
-                Container(
-                  width: _phoneWidth - 30,
-                  height: 400,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(25),
-                    color: !isHandcuffConnected
-                        ? Palette.darkButtonColor
-                        : isHandcuffConnected &&
-                                (handcuffStatus == HandcuffStatus.runAway)
-                            ? Palette.emergencyColor
-                            : Palette.lightButtonColor,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Text(
-                            isHandcuffConnected ? 'ON' : 'OFF',
-                            style: GoogleFonts.notoSans(
-                              textStyle: TextStyle(
-                                color: isHandcuffConnected
-                                    ? Palette.darkTextColor
-                                    : Palette.whiteTextColor,
-                                fontSize: 36,
-                                fontWeight: FontWeight.w800,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            !isHandcuffConnected
-                                ? '-'
-                                : batteryLevel == BatteryLevel.high
-                                    ? '상 '
-                                    : batteryLevel == BatteryLevel.middle
-                                        ? '중'
-                                        : batteryLevel == BatteryLevel.low
-                                            ? '하'
-                                            : '-',
-                            style: GoogleFonts.notoSans(
-                              textStyle: TextStyle(
-                                color: isHandcuffConnected
-                                    ? Palette.darkTextColor
-                                    : Palette.whiteTextColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              if (!isHandcuffConnected ||
-                                  gpsStatus == GpsStatus.disconnected) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) {
-                                      return const HandcuffOnMapByMqtt();
-                                    },
-                                  ),
-                                );
-                              }
-                            },
-                            child: Text(
-                              !isHandcuffConnected ||
-                                      gpsStatus == GpsStatus.disconnected
-                                  ? '마지막 위치'
-                                  : gpsStatus == GpsStatus.connected
-                                      ? '위치확인'
-                                      : '위치확인중...',
-                              style: GoogleFonts.notoSans(
-                                textStyle: TextStyle(
-                                  color: isHandcuffConnected
-                                      ? Palette.darkTextColor
-                                      : Palette.whiteTextColor,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        height: 330,
-                        width: _phoneWidth - 50,
-                        margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(25),
-                          color: Colors.black,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset(
-                              'images/handcuff.png',
-                              width: 270,
-                              fit: BoxFit.fill,
-                            ),
-                          ],
-                        ),
-                      ),
-                      // SizedBox(
-                      //   height: 10,
-                      // )
-                    ],
-                  ),
-                ),
+
+              MainPageStatus(),
               const SizedBox(
                 height: 30,
               ),
-              // 수갑 추가 버튼
-              if (!isHandcuffRegistered)
-                SizedBox(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) {
-                        return HandcuffScreen();
-                      }));
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(0),
-                      height: 60,
-                      width: 60,
-                      decoration: BoxDecoration(
-                        color: Color(0xff00e693),
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: const Icon(
-                          Icons.add,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              if (isHandcuffRegistered)
-                SizedBox(
-                  child: GestureDetector(
-                    onTap: () {
-                      _deleteHandcuff();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(0),
-                      height: 60,
-                      width: 60,
-                      decoration: BoxDecoration(
-                        color: Palette.darkButtonColor,
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: const Icon(
-                          Icons.clear,
-                          color: Palette.darkTextColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                )
+              HandcuffAdd(),
             ],
           ),
         ),
       ),
     );
-  }
-
-  void _selectedActionMenuItem(BuildContext context, item) {
-    switch (item) {
-      case HandcuffMenu.deleteHandcuff:
-        _showToast("등록된 수갑 삭제");
-
-        // 수갑 삭제 추가
-        setState(() {
-          isHandcuffRegistered = false;
-        });
-        break;
-      case HandcuffMenu.logout:
-        // 모든 페이지를 제거 후 지정한 페이지를 push
-        Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-            (route) => false);
-        break;
-      case HandcuffMenu.exit:
-        _exitApp();
-    }
   }
 
   Future _deleteHandcuff() async {
@@ -441,7 +174,7 @@ class _MainPageScreenState extends State<MainPageScreen> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  isHandcuffRegistered = false;
+                  context.watch<HandcuffInfo>().isHandcuffRegistered = false;
                 });
                 Navigator.pop(context);
               },

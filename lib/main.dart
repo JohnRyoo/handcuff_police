@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:police/screens/login.dart';
+import 'package:police/service/handcuffInfo.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(const HandcuffPolice());
@@ -10,12 +12,15 @@ class HandcuffPolice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Smart Handcuff for Police',
-      theme: ThemeData(
-        primarySwatch: Colors.blue
+    return ChangeNotifierProvider(
+      create: (context) => HandcuffInfo(),
+      child: MaterialApp(
+        title: 'Smart Handcuff for Police',
+        theme: ThemeData(
+          primarySwatch: Colors.blue
+        ),
+        home: LoginScreen(),
       ),
-      home: LoginScreen(),
     );
   }
 }

@@ -11,6 +11,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
+import 'package:police/screens/component/map/map_screen_status.dart';
+import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 
 import 'package:provider/provider.dart';
 import '../config/palette.dart';
@@ -18,15 +20,18 @@ import '../mqtt/MQTTManager.dart';
 import '../mqtt/state/MQTTAppState.dart';
 import 'package:wakelock/wakelock.dart';
 
+import '../service/handcuffInfo.dart';
 import 'login.dart';
 
-enum SmartMenu { handcuffLocation, myPosition, logout }
-
-enum HandcuffMenu { deleteHandcuff, logout, exit }
-enum BatteryLevel { high, middle, low }
-enum HandcuffStatus { normal, runAway }
-enum GpsStatus { disconnected, connecting, connected }
-
+// enum SmartMenu { handcuffLocation, myPosition, logout }
+//
+// enum HandcuffMenu { deleteHandcuff, logout, exit }
+//
+// enum BatteryLevel { high, middle, low }
+//
+// enum HandcuffStatus { normal, runAway }
+//
+// enum GpsStatus { disconnected, connecting, connected }
 
 class HandcuffOnMap extends StatefulWidget {
   const HandcuffOnMap({Key? key}) : super(key: key);
@@ -46,7 +51,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
 
   // 지도가 시작될 때 첫 번째 위치
   final CameraPosition _initialPosition =
-  const CameraPosition(target: LatLng(37.3927, 126.9741), zoom: 18);
+      const CameraPosition(target: LatLng(37.3927, 126.9741), zoom: 18);
 
   // 지도 클릭 시 표시할 장소에 대한 마커 목록
   final List<Marker> markers = [];
@@ -56,9 +61,9 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
 
   void addCustomIcon() {
     BitmapDescriptor.fromAssetImage(
-        const ImageConfiguration(), "image/red_dot_14.png")
+            const ImageConfiguration(), "image/red_dot_14.png")
         .then(
-          (icon) {
+      (icon) {
         setState(() {
           markerIcon = icon;
         });
@@ -199,6 +204,10 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
     return await Geolocator.getCurrentPosition();
   }
 
+  final int _duration = 10;
+  final CountDownController _countDownController = CountDownController();
+  bool isAlarmOn = false;
+
   @override
   Widget build(BuildContext context) {
     final MQTTAppState appState = Provider.of<MQTTAppState>(context);
@@ -254,44 +263,16 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
             },
             icon: const Icon(Icons.exit_to_app),
           ),
-          // PopupMenuButton(
-          //     icon: const Icon(
-          //       Icons.menu,
-          //       color: Palette.whiteTextColor,
-          //     ),
-          //     color: Palette.lightButtonColor,
-          //     onSelected: (item) => _selectedActionMenuItem(context, item),
-          //     itemBuilder: (context) =>
-          //     [
-          //       PopupMenuItem<HandcuffMenu>(
-          //           value: HandcuffMenu.logout,
-          //           child: Text(
-          //             "로그아웃",
-          //             style: GoogleFonts.notoSans(
-          //               textStyle: const TextStyle(
-          //                 color: Palette.darkTextColor,
-          //                 fontSize: 16,
-          //                 fontWeight: FontWeight.w600,
-          //               ),
-          //             ),
-          //           )),
-          //       PopupMenuItem<HandcuffMenu>(
-          //           value: HandcuffMenu.exit,
-          //           child: Text(
-          //             "앱 종료",
-          //             style: GoogleFonts.notoSans(
-          //               textStyle: const TextStyle(
-          //                 color: Palette.darkTextColor,
-          //                 fontSize: 16,
-          //                 fontWeight: FontWeight.w600,
-          //               ),
-          //             ),
-          //           ))
-          //     ]),
         ],
       ),
       body: Stack(
         children: [
+          Positioned(
+            child: Container(
+              color: Palette.backgroundColor,
+            ),
+          ),
+
           GoogleMap(
             initialCameraPosition: _initialPosition,
             // initialCameraPosition: CameraPosition(target: LatLng(currentAppState.getLatitude, currentAppState.getLongitude), zoom: 13),
@@ -311,84 +292,109 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
           ),
 
           // ON, 상, 마지막 위치 표시
+          MapScreenStatus(),
+          // 아래쪽 세개의 버튼
           Positioned(
-            top: 20,
-            child: Container(
-              width: _phoneWidth - 40,
-              height: 60,
-              margin: const EdgeInsets.symmetric(horizontal: 20.0),
-              // decoration: BoxDecoration(
-              //   color: Colors.orange,
-              //   borderRadius: BorderRadius.circular(7.0),
-              //   boxShadow: [
-              //     BoxShadow(
-              //       color: Colors.black.withOpacity(0.3),
-              //       blurRadius: 15,
-              //       spreadRadius: 5,
-              //     ),
-              //   ],
-              // ),
-              decoration: BoxDecoration(
-                color: (handcuffStatus == HandcuffStatus.runAway)
-                    ? Palette.emergencyColor
-                    : Palette.lightButtonColor,
-                borderRadius: BorderRadius.circular(25),
-              ),
+            top: _phoneHeight - 200,
+            left: 0,
+            right: 0,
+            child: Center(
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Text(
-                    isHandcuffConnected ? 'ON' : 'OFF',
-                    style: GoogleFonts.notoSans(
-                      textStyle: TextStyle(
-                        color: isHandcuffConnected
-                            ? Palette.darkTextColor
-                            : Palette.whiteTextColor,
-                        fontSize: 36,
-                        fontWeight: FontWeight.w800,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    !isHandcuffConnected
-                        ? '-'
-                        : batteryLevel == BatteryLevel.high
-                        ? '상 '
-                        : batteryLevel == BatteryLevel.middle
-                        ? '중'
-                        : batteryLevel == BatteryLevel.low
-                        ? '하'
-                        : '-',
-                    style: GoogleFonts.notoSans(
-                      textStyle: TextStyle(
-                        color: isHandcuffConnected
-                            ? Palette.darkTextColor
-                            : Palette.whiteTextColor,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
+                  GestureDetector(
+                    onTap: () {
+                      _displayMyPosition();
                     },
-                    child: Text(
-                      !isHandcuffConnected ||
-                          gpsStatus == GpsStatus.disconnected
-                          ? '마지막 위치'
-                          : gpsStatus == GpsStatus.connected
-                          ? '위치확인'
-                          : '위치확인중...',
-                      style: GoogleFonts.notoSans(
-                        textStyle: TextStyle(
-                          color: isHandcuffConnected
-                              ? Palette.darkTextColor
-                              : Palette.whiteTextColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          height: 1.4,
+                    child: Container(
+                      padding: const EdgeInsets.all(0),
+                      height: 60,
+                      width: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          "ME",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      if (!isAlarmOn) {
+                        isAlarmOn = true;
+                        _countDownController.start();
+                      } else {
+                        isAlarmOn = false;
+                        _countDownController.reset();
+                      }
+
+                      print("Alarm ON at Handcuff!!");
+                    },
+                    child: CircularCountDownTimer (
+                      duration: _duration,
+                      initialDuration: 0,
+                      controller: _countDownController,
+                      height: 60,
+                      width: 60,
+                      ringColor: Colors.grey,
+                      ringGradient: null,
+                      fillColor: Colors.black,
+                      fillGradient: null,
+                      backgroundColor: Colors.black,
+                      backgroundGradient: null,
+                      strokeWidth: 6.0,
+                      strokeCap: StrokeCap.round,
+                      textStyle: const TextStyle(
+                        fontSize: 16.0,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textFormat: CountdownTextFormat.S,
+                      isReverse: true,
+                      isReverseAnimation: false,
+                      isTimerTextShown: true,
+                      autoStart: false,
+                      onStart: () {
+                        debugPrint('Countdown Start!!!!');
+                      },
+                      onComplete: () {
+                        debugPrint('Countdown End!!!!');
+                      },
+                      onChange: (String timeStamp) {
+                        debugPrint('Countdown Changed $timeStamp');
+                      },
+                      timeFormatterFunction: (defaultFormatterFunction, duration) {
+                        if (duration.inSeconds == _duration || duration.inSeconds == 0) {
+                          return '\u{2795}'; // unicode emoji U+1F6B7
+                        } else {
+                          return Function.apply(defaultFormatterFunction, [duration]);
+                        }
+                      },
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _displayHandcuffPosition();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(0),
+                      height: 60,
+                      width: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          "ON",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
                       ),
                     ),
@@ -399,69 +405,27 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
           ),
         ],
       ),
-
-      floatingActionButton: Stack(
-        children: <Widget>[
-          Align(
-            alignment:
-            Alignment(Alignment.bottomLeft.x + 0.4, Alignment.bottomLeft.y - 0.02),
-            child: FloatingActionButton(
-              heroTag: "btn1",
-              // onPressed: listenToLocationChanges,
-              onPressed: _displayMyPosition,
-              tooltip: '나의 위치로 가기',
-              backgroundColor: Colors.black,
-              // child: const Icon(Icons.add_location, color: Colors.white,),
-              child: const Text("ME", style: TextStyle(color: Colors.white, fontSize: 16),),
-            ),
-          ),
-
-          Align(
-            alignment:
-              Alignment(Alignment.center.x, Alignment.bottomCenter.y - 0.02),
-            child: FloatingActionButton(
-              heroTag: "btn2",
-              onPressed: _displayHandcuffPosition,
-              tooltip: '수갑 알람 울리기',
-              // child: const Icon(Icons.handshake),
-              backgroundColor: Colors.black,
-              child: const Icon(Icons.alarm_on, color: Colors.white,),
-            ),
-          ),
-
-          Align(
-            alignment: Alignment(Alignment.bottomRight.x -0.4, Alignment.bottomRight.y - 0.02),
-            child: FloatingActionButton(
-              heroTag: "btn3",
-              onPressed: _displayHandcuffPosition,
-              tooltip: '수갑 위치로 가기',
-              backgroundColor: Colors.black,
-              child: const Text("ON", style: TextStyle(color: Colors.white, fontSize: 16),),
-            ),
-          )
-        ],
-      ),
     );
   }
 
-  void SelectedActionMenuItem(BuildContext context, item) {
-    switch (item) {
-      case SmartMenu.handcuffLocation:
-        print('SelectedActionMenuItem::_configureAndConnect');
-        showToast("수갑 위치 받는 중!!!");
-        _configureAndConnect();
-        break;
-      case SmartMenu.myPosition:
-        print('SelectedActionMenuItem::_publishMyLocation');
-        showToast("나의 위치 전송 중!!!");
-        _sendConfigureAndConnect();
-        _publishMyLocation();
-        break;
-      case SmartMenu.logout:
-        print('SelectedActionMenuItem::로그아웃');
-        break;
-    }
-  }
+  // void selectedActionMenuItem(BuildContext context, item) {
+  //   switch (item) ㅇ{
+  //     case SmartMenu.handcuffLocation:
+  //       print('SelectedActionMenuItem::_configureAndConnect');
+  //       showToast("수갑 위치 받는 중!!!");
+  //       _configureAndConnect();
+  //       break;
+  //     case SmartMenu.myPosition:
+  //       print('SelectedActionMenuItem::_publishMyLocation');
+  //       showToast("나의 위치 전송 중!!!");
+  //       _sendConfigureAndConnect();
+  //       _publishMyLocation();
+  //       break;
+  //     case SmartMenu.logout:
+  //       print('SelectedActionMenuItem::로그아웃');
+  //       break;
+  //   }
+  // }
 
   String _distanceBetweenMeAndHandcuff() {
     if (_currentPosition == null) {
@@ -514,29 +478,29 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
     print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     positionStream =
         Geolocator.getPositionStream(locationSettings: locationSettings).listen(
-              (Position? position) {
-            print(position == null ? 'Unknown' : '$position');
+      (Position? position) {
+        print(position == null ? 'Unknown' : '$position');
 
-            setState(() {
-              if (position != null) {
-                print(
-                    '>> >> >> >> >> listenToLocationChanges(): setState current poistion = $position');
-                _currentPosition = position;
+        setState(() {
+          if (position != null) {
+            print(
+                '>> >> >> >> >> listenToLocationChanges(): setState current poistion = $position');
+            _currentPosition = position;
 
-                if (_publishMyCurrentLocation == true &&
-                    currentAppState.getAppConnectionState ==
-                        MQTTAppConnectionState.connected) {
-                  var publishingText = _currentPosition!.latitude.toString() +
-                      ' ' +
-                      _currentPosition!.longitude.toString();
-                  print('>> >> >> >> >> publishingText = $publishingText');
-                  manager.publish(publishingText);
-                }
-              }
-              ;
-            });
-          },
-        );
+            if (_publishMyCurrentLocation == true &&
+                currentAppState.getAppConnectionState ==
+                    MQTTAppConnectionState.connected) {
+              var publishingText = _currentPosition!.latitude.toString() +
+                  ' ' +
+                  _currentPosition!.longitude.toString();
+              print('>> >> >> >> >> publishingText = $publishingText');
+              manager.publish(publishingText);
+            }
+          }
+          ;
+        });
+      },
+    );
   }
 
   Future<void> _displayHandcuffPosition() async {
@@ -623,11 +587,11 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
   void _selectedActionMenuItem(BuildContext context, item) {
     switch (item) {
       case HandcuffMenu.logout:
-      // 모든 페이지를 제거 후 지정한 페이지를 push
+        // 모든 페이지를 제거 후 지정한 페이지를 push
         Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (route) => false);
+            (route) => false);
         break;
       case HandcuffMenu.exit:
         _exitApp();

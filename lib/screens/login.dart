@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:police/screens/main_page.dart';
 import 'package:police/screens/signup.dart';
-
+import 'package:getwidget/getwidget.dart';
 import '../config/palette.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -337,6 +337,33 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
       ),
+      // floatingActionButton: Stack(children: <Widget>[
+      //   Align(
+      //     alignment: Alignment.bottomCenter,
+      //     child: FloatingActionButton(
+      //       onPressed: () {
+      //         print("progress bar... ");
+      //       },
+      //       child: Container(
+      //         color: Colors.black,
+      //         child: GFProgressBar(
+      //           padding: const EdgeInsets.fromLTRB(0, 28, 0, 0),
+      //           percentage: 0.6,
+      //           width: 70,
+      //           radius: 65,
+      //           type: GFProgressType.circular,
+      //           backgroundColor: Colors.red,
+      //           progressBarColor: Colors.white,
+      //           child: const Text(
+      //             '90',
+      //             textAlign: TextAlign.center,
+      //             style: TextStyle(fontSize: 16, color: Colors.white),
+      //           ),
+      //         ),
+      //       ),
+      //     ),
+      //   ),
+      // ]),
     );
   }
 }

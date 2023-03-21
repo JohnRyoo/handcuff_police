@@ -43,6 +43,8 @@ dependencies:
   geolocator: ^9.0.2
   google_maps_flutter: ^2.2.5
   wakelock: ^0.6.2
+  getwidget: ^3.0.1
+  circular_countdown_timer: ^0.2.3
 
 dev_dependencies:
   flutter_test:
