@@ -59,7 +59,7 @@ class MainPageStatus extends StatelessWidget {
           borderRadius: BorderRadius.circular(25),
           color: !isHandcuffConnected
               ? Palette.darkButtonColor
-              : !isHandcuffConnected &&
+              : isHandcuffConnected &&
                       (handcuffStatus == HandcuffStatus.runAway)
                   ? Palette.emergencyColor
                   : Palette.lightButtonColor,

@@ -9,10 +9,10 @@ class HandcuffInfo with ChangeNotifier {
   String _serialNumber = '';
 
   bool _isHandcuffRegistered = false;
-  bool _isHandcuffConnected = false; // 수갑 등록 후 수갑과의 연결 여부
+  bool _isHandcuffConnected = true; // 수갑 등록 후 수갑과의 연결 여부
   GpsStatus _gpsStatus = GpsStatus.disconnected; // 수갑 연결 후 GPS 연결
   BatteryLevel _batteryLevel = BatteryLevel.high;
-  HandcuffStatus _handcuffStatus = HandcuffStatus.normal;
+  HandcuffStatus _handcuffStatus = HandcuffStatus.runAway;
 
   String get serialNumber => _serialNumber;
 

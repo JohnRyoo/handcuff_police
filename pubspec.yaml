@@ -45,6 +45,9 @@ dependencies:
   wakelock: ^0.6.2
   getwidget: ^3.0.1
   circular_countdown_timer: ^0.2.3
+  location: ^4.4.0
+  flutter_polyline_points: ^1.0.0
+
 
 dev_dependencies:
   flutter_test:
