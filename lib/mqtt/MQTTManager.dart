@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:police/mqtt/state/MQTTAppState.dart';
@@ -9,21 +10,15 @@ class MQTTManager {
   final String _identifier;
   final String _host;
   final String _topic;
-  bool _receiveDataFromHandcuff = false;
-
-  bool get receiveDataFromHandcuff => _receiveDataFromHandcuff;
-  set receiveDataFromHandcuff(bool receiveDataFromHandcuff) {
-    _receiveDataFromHandcuff = receiveDataFromHandcuff;
-    print('receiveDataFromHandcuff = $receiveDataFromHandcuff');
-  }
+  bool receiveDataFromHandcuff = false;
 
   // Constructor
   // ignore: sort_constructors_first
   MQTTManager(
       {required String host,
-        required String topic,
-        required String identifier,
-        required MQTTAppState state})
+      required String topic,
+      required String identifier,
+      required MQTTAppState state})
       : _identifier = identifier,
         _host = host,
         _topic = topic,
@@ -44,11 +39,11 @@ class MQTTManager {
     final MqttConnectMessage connMess = MqttConnectMessage()
         .withClientIdentifier(_identifier)
         .withWillTopic(
-        'willtopic') // If you set this you must set a will message
+            'willtopic') // If you set this you must set a will message
         .withWillMessage('My Will message')
         .startClean() // Non persistent session for testing
         .withWillQos(MqttQos.atLeastOnce);
-    print('EXAMPLE::Mosquitto client connecting....');
+    debugPrint('EXAMPLE::Mosquitto client connecting....');
     _client!.connectionMessage = connMess;
   }
 
@@ -57,17 +52,17 @@ class MQTTManager {
   void connect() async {
     assert(_client != null);
     try {
-      print('EXAMPLE::Mosquitto start client connecting....');
+      debugPrint('EXAMPLE::Mosquitto start client connecting....');
       _currentState.setAppConnectionState(MQTTAppConnectionState.connecting);
       await _client!.connect();
     } on Exception catch (e) {
-      print('EXAMPLE::client exception - $e');
+      debugPrint('EXAMPLE::client exception - $e');
       disconnect();
     }
   }
 
   void disconnect() {
-    print('Disconnected');
+    debugPrint('Disconnected');
     _client!.disconnect();
   }
 
@@ -79,15 +74,17 @@ class MQTTManager {
 
   /// The subscribed callback
   void onSubscribed(String topic) {
-    print('EXAMPLE::Subscription confirmed for topic $topic');
+    debugPrint('EXAMPLE::Subscription confirmed for topic $topic');
   }
 
   /// The unsolicited disconnect callback
   void onDisconnected() {
-    print('EXAMPLE::OnDisconnected client callback - Client disconnection');
+    debugPrint(
+        'EXAMPLE::OnDisconnected client callback - Client disconnection');
     if (_client!.connectionStatus!.returnCode ==
         MqttConnectReturnCode.noneSpecified) {
-      print('EXAMPLE::OnDisconnected callback is solicited, this is correct');
+      debugPrint(
+          'EXAMPLE::OnDisconnected callback is solicited, this is correct');
     }
     _currentState.setAppConnectionState(MQTTAppConnectionState.disconnected);
   }
@@ -95,25 +92,23 @@ class MQTTManager {
   /// The successful connect callback
   void onConnected() {
     _currentState.setAppConnectionState(MQTTAppConnectionState.connected);
-    print('EXAMPLE::Mosquitto client connected....');
-    print("_receiveDataFromHandcuff = $_receiveDataFromHandcuff");
-    if (_receiveDataFromHandcuff == true) {
-      _client!.subscribe(_topic, MqttQos.atLeastOnce);
-      _client!.updates!.listen((List<MqttReceivedMessage<MqttMessage?>>? c) {
-        // ignore: avoid_as
-        final MqttPublishMessage recMess = c![0].payload as MqttPublishMessage;
+    debugPrint('EXAMPLE::Mosquitto client connected....');
+    debugPrint("_receiveDataFromHandcuff = $receiveDataFromHandcuff");
+    _client!.subscribe(_topic, MqttQos.atLeastOnce);
+    _client!.updates!.listen((List<MqttReceivedMessage<MqttMessage?>>? c) {
+      // ignore: avoid_as
+      final MqttPublishMessage recMess = c![0].payload as MqttPublishMessage;
 
-        // final MqttPublishMessage recMess = c![0].payload;
-        final String pt =
-        MqttPublishPayload.bytesToStringAsString(recMess.payload.message!);
-        // _currentState.setReceivedText(pt);
-        _currentState.setReceivedJsonString(pt);
-        print(
-            'EXAMPLE::Change notification:: topic is <${c[0].topic}>, payload is <-- $pt -->');
-        print('');
-        print(
-            'EXAMPLE::OnConnected client callback - Client connection was successful');
-      });
-    }
+      // final MqttPublishMessage recMess = c![0].payload;
+      final String pt =
+          MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+      // _currentState.setReceivedText(pt);
+      _currentState.setReceivedJsonString(pt);
+      debugPrint(
+          'EXAMPLE::Change notification:: topic is <${c[0].topic}>, payload is <-- $pt -->');
+      debugPrint('');
+      debugPrint(
+          'EXAMPLE::OnConnected client callback - Client connection was successful');
+    });
   }
 }

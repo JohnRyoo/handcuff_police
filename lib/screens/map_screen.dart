@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,7 +27,7 @@ class HandcuffOnMap extends StatefulWidget {
 
 class _HandcuffOnMapState extends State<HandcuffOnMap> {
   // late MQTTAppState currentAppState = MQTTAppState();
-  late MQTTAppState currentAppState;
+  late MQTTAppState currentMqttAppState;
   late MQTTManager manager;
 
   late bool isHandcuffRegistered;
@@ -44,7 +45,9 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
 
   LocationData? currentLocation;
   LocationData? startLocation;
-  List<LatLng> trackingPoints = []; // 식별된 GPS 좌표를 저장한 후 선으포 표시
+  List<LatLng> policeTrackingPoints = []; // 스마트폰에서 식별된 GPS 좌표를 저장
+  List<LatLng> handcuffTrackingPoints = []; // MQTT를 통해 수신된 수갑의 좌표를 저장
+  List<LatLng> handcuffTrackingPoints2 = []; // MQTT를 통해 수신된 수갑의 좌표를 저장
 
   BitmapDescriptor startIcon = BitmapDescriptor.defaultMarker;
   BitmapDescriptor handcuffIcon = BitmapDescriptor.defaultMarker;
@@ -61,10 +64,10 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
     location.getLocation().then(
       (location) {
         currentLocation = location;
-        startLocation = location;
+        // startLocation = location;
         debugPrint("First currentLocation = $currentLocation");
 
-        trackingPoints.add(
+        policeTrackingPoints.add(
           LatLng(location.latitude as double, location.longitude as double),
         );
         setState(() {});
@@ -78,7 +81,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
         currentLocation = newLocation;
         setCustomMarkerIcon();
 
-        trackingPoints.add(
+        policeTrackingPoints.add(
           LatLng(
               newLocation.latitude as double, newLocation.longitude as double),
         );
@@ -152,6 +155,23 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
   final CountDownController _countDownController = CountDownController();
   bool isAlarmOn = false;
 
+  // ***************************************************************************
+  // ************************* MQTT ************************************
+  // ***************************************************************************
+
+  void mqttConnect() {
+    var randomId = Random().nextInt(1000) + 1;
+    manager = MQTTManager(
+        host: "13.124.88.113",
+        // host: "192.168.0.7",
+        topic: "ID0001",
+        identifier: 'CJS_HandcuffTest_$randomId',
+        state: currentMqttAppState);
+    manager.initializeMQTTClient();
+    manager.receiveDataFromHandcuff = true;
+    manager.connect();
+  }
+
   @override
   void initState() {
     getCurrentLocation();
@@ -178,11 +198,32 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
   // ***************************************************************************
   @override
   Widget build(BuildContext context) {
-    final MQTTAppState appState = Provider.of<MQTTAppState>(context);
-    // Keep a reference to the app state.
-    currentAppState = appState;
+    final MQTTAppState mqttAppState = Provider.of<MQTTAppState>(context);
+    currentMqttAppState = mqttAppState;
 
-    debugPrint("trackingLocations = $trackingPoints");
+    // Keep a reference to the app state.
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      if (currentMqttAppState.getAppConnectionState ==
+          MQTTAppConnectionState.disconnected) {
+        debugPrint("run MQTT CONNECT!");
+        mqttConnect();
+      }
+    });
+
+    handcuffTrackingPoints = List.from(currentMqttAppState.getHandcuffTrackingPoints);
+    // handcuffTrackingPoints = currentMqttAppState.getHandcuffTrackingPoints;
+    // if (handcuffTrackingPoints.isNotEmpty) {
+    //   for (int i=0; i<handcuffTrackingPoints.length; i++) {
+    //     handcuffTrackingPoints2[i] = handcuffTrackingPoints[i];
+    //   }
+    // }
+
+    debugPrint("handcuffTrackingPoints = $handcuffTrackingPoints");
+    debugPrint(
+        "handcuff latitude = ${currentMqttAppState.receivedLastLatitude}");
+    debugPrint(
+        "handcuff longitude = ${currentMqttAppState.receivedLastLongitude}");
+    // debugPrint("currentMqttAppState.getHandcuffTrackingPoints = ${currentMqttAppState.getHandcuffTrackingPoints}");
 
     isHandcuffRegistered = context.watch<HandcuffInfo>().isHandcuffRegistered;
     isHandcuffConnected = context.watch<HandcuffInfo>().isHandcuffConnected;
@@ -232,12 +273,18 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                       zoom: 16.5),
                   polylines: {
                     Polyline(
-                      polylineId: PolylineId("route"),
-                      points: trackingPoints,
+                      polylineId: const PolylineId("policeTracking"),
+                      points: policeTrackingPoints,
+                      color: Colors.brown.shade300,
+                      width: 5,
+                    ),
+                    Polyline(
+                      polylineId: const PolylineId("handcuffTracking"),
+                      points: handcuffTrackingPoints,
                       color: (handcuffStatus == HandcuffStatus.runAway)
                           ? Colors.redAccent
                           : Colors.lightBlue,
-                      width: 8,
+                      width: 7,
                     )
                   },
                   zoomControlsEnabled: true,
@@ -250,11 +297,17 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                       _controller.complete(controller);
                     });
                   },
-                  // markers: markers.toSet(),
                   markers: {
                     Marker(
-                      markerId: const MarkerId("currentLocation"),
+                      markerId: const MarkerId("handcuffLocation"),
                       icon: handcuffIcon,
+                      position: LatLng(
+                          currentMqttAppState.receivedLastLatitude,
+                          currentMqttAppState.receivedLastLongitude),
+                    ),
+                    Marker(
+                      markerId: const MarkerId("policeLocation"),
+                      icon: policeIcon,
                       position: LatLng(currentLocation!.latitude!,
                           currentLocation!.longitude!),
                     ),
@@ -262,15 +315,15 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                       markerId: const MarkerId("start"),
                       icon: startIcon,
                       position: LatLng(
-                        startLocation!.latitude!,
-                        startLocation!.longitude!,
+                        currentMqttAppState.startLocation.latitude,
+                        currentMqttAppState.startLocation.longitude,
                       ),
                     )
                   },
                   onTap: (cordinate) {
                     // _displayPositionOnTab(cordinate);
                   },
-            onCameraMove: _setCurrentZoomValue,
+                  onCameraMove: _setCurrentZoomValue,
                 ),
 
           // ON, 상, 마지막 위치 표시
