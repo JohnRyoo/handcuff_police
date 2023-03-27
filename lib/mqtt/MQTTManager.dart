@@ -95,6 +95,7 @@ class MQTTManager {
     debugPrint('EXAMPLE::Mosquitto client connected....');
     debugPrint("_receiveDataFromHandcuff = $receiveDataFromHandcuff");
     _client!.subscribe(_topic, MqttQos.atLeastOnce);
+
     _client!.updates!.listen((List<MqttReceivedMessage<MqttMessage?>>? c) {
       // ignore: avoid_as
       final MqttPublishMessage recMess = c![0].payload as MqttPublishMessage;

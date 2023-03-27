@@ -272,12 +272,12 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                           currentLocation!.longitude!),
                       zoom: 16.5),
                   polylines: {
-                    Polyline(
-                      polylineId: const PolylineId("policeTracking"),
-                      points: policeTrackingPoints,
-                      color: Colors.brown.shade300,
-                      width: 5,
-                    ),
+                    // Polyline(
+                    //   polylineId: const PolylineId("policeTracking"),
+                    //   points: policeTrackingPoints,
+                    //   color: Colors.brown.shade300,
+                    //   width: 5,
+                    // ),
                     Polyline(
                       polylineId: const PolylineId("handcuffTracking"),
                       points: handcuffTrackingPoints,
@@ -290,7 +290,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                   zoomControlsEnabled: true,
                   mapType: MapType.normal,
                   myLocationEnabled: false,
-                  myLocationButtonEnabled: true,
+                  myLocationButtonEnabled: false,
+                  compassEnabled: true,
                   onMapCreated: (GoogleMapController controller) {
                     setState(() {
                       debugPrint('setState() in GoogleMap');
