@@ -26,7 +26,6 @@ class HandcuffOnMap extends StatefulWidget {
 }
 
 class _HandcuffOnMapState extends State<HandcuffOnMap> {
-  // late MQTTAppState currentAppState = MQTTAppState();
   late MQTTAppState currentMqttAppState;
   late MQTTManager manager;
 
@@ -34,7 +33,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
   late bool isHandcuffConnected;
   late HandcuffStatus handcuffStatus;
   late BatteryLevel batteryLevel;
-  late GpsStatus gpsStatus;
+  // late GpsStatus gpsStatus;
+  late GpsStatus gpsStatusFromMqtt;
 
   // 어플리케이션에서 지도를 이동하기 위한 컨트롤러
   final Completer<GoogleMapController> _controller = Completer();
@@ -198,17 +198,16 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
   // ***************************************************************************
   @override
   Widget build(BuildContext context) {
-    final MQTTAppState mqttAppState = Provider.of<MQTTAppState>(context);
-    currentMqttAppState = mqttAppState;
+    currentMqttAppState = Provider.of<MQTTAppState>(context);
 
     // Keep a reference to the app state.
-    WidgetsBinding.instance!.addPostFrameCallback((_) {
-      if (currentMqttAppState.getAppConnectionState ==
-          MQTTAppConnectionState.disconnected) {
-        debugPrint("run MQTT CONNECT!");
-        mqttConnect();
-      }
-    });
+    // WidgetsBinding.instance!.addPostFrameCallback((_) {
+    //   if (currentMqttAppState.getAppConnectionState ==
+    //       MQTTAppConnectionState.disconnected) {
+    //     debugPrint("run MQTT CONNECT!");
+    //     mqttConnect();
+    //   }
+    // });
 
     handcuffTrackingPoints = List.from(currentMqttAppState.getHandcuffTrackingPoints);
     // handcuffTrackingPoints = currentMqttAppState.getHandcuffTrackingPoints;
@@ -229,7 +228,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
     isHandcuffConnected = context.watch<HandcuffInfo>().isHandcuffConnected;
     handcuffStatus = context.watch<HandcuffInfo>().handcuffStatus;
     batteryLevel = context.watch<HandcuffInfo>().batteryLevel;
-    gpsStatus = context.watch<HandcuffInfo>().gpsStatus;
+    // gpsStatus = context.watch<HandcuffInfo>().gpsStatus;
+    gpsStatusFromMqtt = context.watch<MQTTAppState>().gpsStatus;
 
     return Scaffold(
       appBar: AppBar(

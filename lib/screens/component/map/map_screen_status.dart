@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../../config/palette.dart';
+import '../../../mqtt/state/MQTTAppState.dart';
 import '../../../service/handcuffInfo.dart';
 
 class MapScreenStatus extends StatelessWidget {
@@ -12,15 +13,16 @@ class MapScreenStatus extends StatelessWidget {
   late bool isHandcuffConnected;
   late HandcuffStatus handcuffStatus;
   late BatteryLevel batteryLevel;
-  late GpsStatus gpsStatus;
-
+  // late GpsStatus gpsStatus;
+  late GpsStatus gpsStatusFromMqtt;
   @override
   Widget build(BuildContext context) {
     isHandcuffRegistered = context.watch<HandcuffInfo>().isHandcuffRegistered;
     isHandcuffConnected = context.watch<HandcuffInfo>().isHandcuffConnected;
     handcuffStatus = context.watch<HandcuffInfo>().handcuffStatus;
     batteryLevel = context.watch<HandcuffInfo>().batteryLevel;
-    gpsStatus = context.watch<HandcuffInfo>().gpsStatus;
+    // gpsStatus = context.watch<HandcuffInfo>().gpsStatus;
+    gpsStatusFromMqtt = context.watch<MQTTAppState>().gpsStatus;
 
     return Positioned(
       top: 20,
@@ -76,9 +78,9 @@ class MapScreenStatus extends StatelessWidget {
             TextButton(
               onPressed: () {},
               child: Text(
-                !isHandcuffConnected || gpsStatus == GpsStatus.disconnected
+                !isHandcuffConnected || gpsStatusFromMqtt == GpsStatus.disconnected
                     ? '마지막 위치'
-                    : gpsStatus == GpsStatus.connected
+                    : gpsStatusFromMqtt == GpsStatus.connected
                         ? '위치확인'
                         : '위치확인중...',
                 style: GoogleFonts.notoSans(

@@ -13,10 +13,7 @@ class HandcuffOnMapByMqtt extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: ChangeNotifierProvider<MQTTAppState> (
-          create: (_) => MQTTAppState(),
-          child: const HandcuffOnMap(),
-        )
+        home: const HandcuffOnMap(),
     );
   }
 }

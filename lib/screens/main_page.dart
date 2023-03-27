@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -7,6 +9,8 @@ import 'package:police/screens/component/main/handcuff_add.dart';
 import 'package:police/screens/component/main/main_page_status.dart';
 import 'package:provider/provider.dart';
 
+import '../mqtt/MQTTManager.dart';
+import '../mqtt/state/MQTTAppState.dart';
 import '../service/handcuffInfo.dart';
 import 'handcuff.dart';
 import 'login.dart';
@@ -20,8 +24,15 @@ class MainPageScreen extends StatefulWidget {
 }
 
 class _MainPageScreenState extends State<MainPageScreen> {
-  late double _phoneWidth;
-  late double _phoneHeight;
+  MQTTAppState currentMqttAppState = MQTTAppState();
+  late MQTTManager manager;
+
+  late bool isHandcuffRegistered;
+  late bool isHandcuffConnected;
+  late HandcuffStatus handcuffStatus;
+  late BatteryLevel batteryLevel;
+  // late GpsStatus gpsStatus;
+  late GpsStatus gpsStatusFromMqtt;
 
   // bool isHandcuffRegistered = true; // 수갑 등록 여부
   // bool isHandcuffConnected = true; // 수갑 등록 후 수갑과의 연결 여부
@@ -30,14 +41,50 @@ class _MainPageScreenState extends State<MainPageScreen> {
   // BatteryLevel batteryLevel = BatteryLevel.high;
   // HandcuffStatus handcuffStatus = HandcuffStatus.normal;
 
+  // 메인 진입 시 일단 MQTT로 수신 여부를 확인해 본다.
+  // if 수신되는 게 없으면... on
+
+  void mqttConnect(String topic) {
+    var randomId = Random().nextInt(1000) + 1;
+    manager = MQTTManager(
+        host: "13.124.88.113",
+        // host: "192.168.0.7",
+        topic: topic,
+        identifier: 'CJS_HandcuffTest_$randomId',
+        state: currentMqttAppState);
+    manager.initializeMQTTClient();
+    manager.receiveDataFromHandcuff = true;
+    manager.connect();
+  }
+
   @override
   Widget build(BuildContext context) {
-    _phoneHeight = MediaQuery.of(context).size.height;
-    _phoneWidth = MediaQuery.of(context).size.width;
-
-    String userId = 'ID_0001';
+    String userId = 'ID0001';
     String userName = '류호창';
     String department = '경찰서 강력반';
+
+    currentMqttAppState = Provider.of<MQTTAppState>(context);
+    debugPrint("Execute main_page build!!");
+
+    isHandcuffRegistered = context.watch<HandcuffInfo>().isHandcuffRegistered;
+    isHandcuffConnected = context.watch<HandcuffInfo>().isHandcuffConnected;
+    handcuffStatus = context.watch<HandcuffInfo>().handcuffStatus;
+    batteryLevel = context.watch<HandcuffInfo>().batteryLevel;
+    // gpsStatus = context.watch<HandcuffInfo>().gpsStatus;
+    gpsStatusFromMqtt = context.watch<MQTTAppState>().gpsStatus;
+
+    debugPrint("gpsStatusFromMqtt = $gpsStatusFromMqtt");
+    // Keep a reference to the app state.
+    if (isHandcuffRegistered) {
+      WidgetsBinding.instance!.addPostFrameCallback((_) {
+        if (currentMqttAppState.getAppConnectionState ==
+            MQTTAppConnectionState.disconnected) {
+          debugPrint("run MQTT CONNECT at main_page!!");
+          // police ID로 정보가 들어오고 있는지 확인을 위해 연결
+          mqttConnect(userId);
+        }
+      });
+    }
 
     // Color nameColor = Palette.lightButtonColor;
 
@@ -68,8 +115,8 @@ class _MainPageScreenState extends State<MainPageScreen> {
         ],
       ),
       body: Container(
-        height: _phoneHeight,
-        width: _phoneWidth,
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
         decoration: const BoxDecoration(
           color: Palette.backgroundColor,
         ),

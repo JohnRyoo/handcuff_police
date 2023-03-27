@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-
+import 'package:police/service/handcuffInfo.dart';
 import '../../service/handcuff_data.dart';
 
 enum MQTTAppConnectionState { connected, disconnected, connecting }
@@ -11,6 +11,8 @@ class MQTTAppState with ChangeNotifier {
   MQTTAppConnectionState _appConnectionState = MQTTAppConnectionState.disconnected;
   String _receivedText = '';
   String _historyText = '';
+
+  late GpsStatus gpsStatus = GpsStatus.disconnected;
 
   double _receivedLastLatitude = 0.0;
 
@@ -47,10 +49,18 @@ class MQTTAppState with ChangeNotifier {
     _receivedLastLatitude = handcuffData.locationMessage.latitude;
     _receivedLastLongitude = handcuffData.locationMessage.longitude;
 
-    _handcuffTrackingPoints.add(LatLng(_receivedLastLatitude, _receivedLastLongitude));
-    _startLocation = _handcuffTrackingPoints[0];
+    if (_receivedLastLatitude.abs() == 0.abs()) {
+      gpsStatus = GpsStatus.connecting;
+      // debugPrint("gpsStatus = GpsStatus.connecting");
+    } else {
+      _handcuffTrackingPoints.add(
+          LatLng(_receivedLastLatitude, _receivedLastLongitude));
+      _startLocation = _handcuffTrackingPoints[0];
+      gpsStatus = GpsStatus.connected;
+      // debugPrint("gpsStatus = GpsStatus.connected");
+    }
 
-    debugPrint("handcuffTrackingPoints = $_handcuffTrackingPoints");
+    // debugPrint("handcuffTrackingPoints = $_handcuffTrackingPoints");
 
     notifyListeners();
   }

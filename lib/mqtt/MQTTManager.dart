@@ -105,11 +105,6 @@ class MQTTManager {
           MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
       // _currentState.setReceivedText(pt);
       _currentState.setReceivedJsonString(pt);
-      debugPrint(
-          'EXAMPLE::Change notification:: topic is <${c[0].topic}>, payload is <-- $pt -->');
-      debugPrint('');
-      debugPrint(
-          'EXAMPLE::OnConnected client callback - Client connection was successful');
     });
   }
 }
