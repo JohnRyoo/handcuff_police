@@ -18,6 +18,8 @@ import 'package:wakelock/wakelock.dart';
 
 import '../service/handcuffInfo.dart';
 
+enum FocusedPosition { POLICE, HANDCUFF }
+
 class HandcuffOnMap extends StatefulWidget {
   const HandcuffOnMap({Key? key}) : super(key: key);
 
@@ -33,6 +35,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
   late bool isHandcuffConnected;
   late HandcuffStatus handcuffStatus;
   late BatteryLevel batteryLevel;
+
   // late GpsStatus gpsStatus;
   late GpsStatus gpsStatusFromMqtt;
 
@@ -54,6 +57,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
   BitmapDescriptor policeIcon = BitmapDescriptor.defaultMarker;
 
   late StreamSubscription<LocationData> locationSubscription;
+
+  FocusedPosition focusedPosition = FocusedPosition.POLICE;
 
   void getCurrentLocation() async {
     Location location = Location();
@@ -86,17 +91,28 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
               newLocation.latitude as double, newLocation.longitude as double),
         );
 
-        googleMapController.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: LatLng(
-                newLocation.latitude!,
-                newLocation.longitude!,
+        if (focusedPosition == FocusedPosition.POLICE) {
+          googleMapController.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: LatLng(
+                  newLocation.latitude!,
+                  newLocation.longitude!,
+                ),
+                zoom: _currentZoomValue,
               ),
-              zoom: _currentZoomValue,
             ),
-          ),
-        );
+          );
+        } else {
+          googleMapController.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: handcuffTrackingPoints.last,
+                zoom: _currentZoomValue,
+              ),
+            ),
+          );
+        }
         if (mounted) {
           setState(() {});
         }
@@ -164,7 +180,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
     manager = MQTTManager(
         host: "13.124.88.113",
         // host: "192.168.0.7",
-        topic: "ID0001",
+        topic: "myTopic",
         identifier: 'CJS_HandcuffTest_$randomId',
         state: currentMqttAppState);
     manager.initializeMQTTClient();
@@ -209,7 +225,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
     //   }
     // });
 
-    handcuffTrackingPoints = List.from(currentMqttAppState.getHandcuffTrackingPoints);
+    handcuffTrackingPoints =
+        List.from(currentMqttAppState.getHandcuffTrackingPoints);
     // handcuffTrackingPoints = currentMqttAppState.getHandcuffTrackingPoints;
     // if (handcuffTrackingPoints.isNotEmpty) {
     //   for (int i=0; i<handcuffTrackingPoints.length; i++) {
@@ -302,8 +319,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                     Marker(
                       markerId: const MarkerId("handcuffLocation"),
                       icon: handcuffIcon,
-                      position: LatLng(
-                          currentMqttAppState.receivedLastLatitude,
+                      position: LatLng(currentMqttAppState.receivedLastLatitude,
                           currentMqttAppState.receivedLastLongitude),
                     ),
                     Marker(
@@ -341,6 +357,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                   GestureDetector(
                     onTap: () {
                       _displayMyPosition();
+                      setState(() {});
                     },
                     child: Container(
                       padding: const EdgeInsets.all(0),
@@ -421,7 +438,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      // _displayHandcuffPosition();
+                      _displayHandcuffPosition();
+                      setState(() {});
                     },
                     child: Container(
                       padding: const EdgeInsets.all(0),
@@ -455,7 +473,26 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
         LatLng(currentLocation!.latitude!, currentLocation!.longitude!),
       ),
     );
+    focusedPosition = FocusedPosition.POLICE;
   }
+
+  Future<void> _displayHandcuffPosition() async {
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(
+      CameraUpdate.newLatLng(
+        handcuffTrackingPoints.last,
+      ),
+    );
+    focusedPosition = FocusedPosition.HANDCUFF;
+  }
+
+  // void _displayMyPosition() {
+  //   focusedPosition = FocusedPosition.POLICE;
+  // }
+
+  // void _displayHandcuffPosition() {
+  //   focusedPosition = FocusedPosition.HANDCUFF;
+  // }
 
   Future _exitApp() async {
     return await showDialog(
