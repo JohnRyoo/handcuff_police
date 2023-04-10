@@ -59,7 +59,7 @@ class _MainPageScreenState extends State<MainPageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    String userId = 'ID0001';
+    String userId = 'myTopic';
     String userName = '류호창';
     String department = '경찰서 강력반';
 
