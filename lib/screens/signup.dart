@@ -19,8 +19,6 @@ class _SignupScreenState extends State<SignupScreen> {
   String userId = '';
   String userPassword = '';
   String userPasswordConfirm = '';
-  String userName = '';
-  String userDepartment = '';
   TextEditingController userPasswordController = TextEditingController();
   TextEditingController userPasswordConfirmController = TextEditingController();
 
@@ -107,12 +105,12 @@ class _SignupScreenState extends State<SignupScreen> {
                       height: 110,
                     ),
 
-                    // 아이디, 비밀번호, 비밀번호 확인, 이름, 근무처/부서 입력
+                    // 아이디, 비밀번호, 비밀번호 확인
                     SizedBox(
                       child: Column(
                         children: [
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 20.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 20.0),
                             child: Form(
                               key: _formKey,
                               child: Column(
@@ -302,121 +300,6 @@ class _SignupScreenState extends State<SignupScreen> {
                                   const SizedBox(
                                     height: 10,
                                   ),
-
-                                  // 이름
-                                  TextFormField(
-                                    key: const ValueKey(4),
-                                    keyboardType: TextInputType.text,
-                                    validator: (value) {
-                                      if (value!.isEmpty) {
-                                        return '이름을 입력하세요.';
-                                      }
-                                      return null;
-                                    },
-                                    onSaved: (value) {
-                                      userName = value!;
-                                    },
-                                    onChanged: (value) {
-                                      userName = value;
-                                    },
-                                    style: const TextStyle(
-                                        color: Palette.whiteTextColor),
-                                    decoration: const InputDecoration(
-                                      filled: true,
-                                      fillColor: Palette.darkButtonColor,
-                                      prefixIcon: Icon(
-                                        Icons.person,
-                                        color: Palette.whiteTextColor,
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(35.0),
-                                        ),
-                                      ),
-                                      errorBorder: OutlineInputBorder(
-                                        // borderSide: BorderSide(
-                                        //   color: Colors.red,
-                                        // ),
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(35.0),
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(35.0),
-                                        ),
-                                      ),
-                                      focusedErrorBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(35.0),
-                                        ),
-                                      ),
-                                      hintText: '이름',
-                                      hintStyle: TextStyle(
-                                        fontSize: 14,
-                                        color: Palette.whiteTextColor,
-                                      ),
-                                    ),
-                                  ),
-
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-
-                                  // 근무처, 부서
-                                  TextFormField(
-                                    key: const ValueKey(5),
-                                    validator: (value) {
-                                      if (value!.isEmpty) {
-                                        return '근무처 또는 부서를 입력하세요.';
-                                      }
-                                      return null;
-                                    },
-                                    onSaved: (value) {
-                                      userDepartment = value!;
-                                    },
-                                    onChanged: (value) {
-                                      userDepartment = value;
-                                    },
-                                    style: const TextStyle(
-                                        color: Palette.whiteTextColor),
-                                    decoration: const InputDecoration(
-                                      filled: true,
-                                      fillColor: Palette.darkButtonColor,
-                                      prefixIcon: Icon(
-                                        Icons.work,
-                                        color: Palette.whiteTextColor,
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(35.0),
-                                        ),
-                                      ),
-                                      errorBorder: OutlineInputBorder(
-                                        // borderSide: BorderSide(
-                                        //   color: Colors.red,
-                                        // ),
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(35.0),
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(35.0),
-                                        ),
-                                      ),
-                                      focusedErrorBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(35.0),
-                                        ),
-                                      ),
-                                      hintText: '근무처,부서',
-                                      hintStyle: TextStyle(
-                                        fontSize: 14,
-                                        color: Palette.whiteTextColor,
-                                      ),
-                                    ),
-                                  ),
                                 ],
                               ),
                             ),
@@ -426,10 +309,10 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
 
                     const SizedBox(
-                      height: 10,
+                      height: 70,
                     ),
 
-                    // 가입하기 버튼
+                    // 등록하기 버튼
                     Container(
                       // width: _phoneWidth,
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -444,17 +327,17 @@ class _SignupScreenState extends State<SignupScreen> {
                             // );
                             Navigator.pop(context);
                           } else {
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(
-                              content: Text(
-                                '입력값을 확인해주세요!',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                ),
-                              ),
-                              backgroundColor: Colors.blue,
-                            ));
+                            // ScaffoldMessenger.of(context)
+                            //     .showSnackBar(const SnackBar(
+                            //   content: Text(
+                            //     '입력값을 확인해주세요!',
+                            //     textAlign: TextAlign.center,
+                            //     style: TextStyle(
+                            //       color: Colors.white,
+                            //     ),
+                            //   ),
+                            //   backgroundColor: Colors.blue,
+                            // ));
                           }
                         },
                         child: Container(
@@ -466,7 +349,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           child: Center(
                             child: Center(
                               child: Text(
-                                '가입하기',
+                                '등록하기',
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.notoSans(
                                     textStyle: const TextStyle(
@@ -485,7 +368,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     const SizedBox(
                       height: 20,
                     ),
-
                   ],
                 ),
               ),

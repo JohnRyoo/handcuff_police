@@ -224,11 +224,11 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
         "handcuff longitude = ${currentMqttAppState.receivedLastLongitude}");
     // debugPrint("currentMqttAppState.getHandcuffTrackingPoints = ${currentMqttAppState.getHandcuffTrackingPoints}");
 
-    isHandcuffRegistered = context.watch<HandcuffInfo>().isHandcuffRegistered;
-    isHandcuffConnected = context.watch<HandcuffInfo>().isHandcuffConnected;
-    handcuffStatus = context.watch<HandcuffInfo>().handcuffStatus;
-    batteryLevel = context.watch<HandcuffInfo>().batteryLevel;
-    // gpsStatus = context.watch<HandcuffInfo>().gpsStatus;
+    // isHandcuffRegistered = context.watch<HandcuffInfo>().isHandcuffRegistered;
+    // isHandcuffConnected = context.watch<HandcuffInfo>().isHandcuffConnected;
+    // handcuffStatus = context.watch<HandcuffInfo>().handcuffStatus;
+    // batteryLevel = context.watch<HandcuffInfo>().batteryLevel;
+    // // gpsStatus = context.watch<HandcuffInfo>().gpsStatus;
     gpsStatusFromMqtt = context.watch<MQTTAppState>().gpsStatus;
 
     return Scaffold(

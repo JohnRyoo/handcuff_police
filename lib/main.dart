@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:police/screens/login.dart';
 import 'package:police/service/handcuffInfo.dart';
+import 'package:police/service/handcuff_watchdog.dart';
 import 'package:provider/provider.dart';
 
 import 'mqtt/state/MQTTAppState.dart';
@@ -17,6 +18,8 @@ class HandcuffPolice extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => HandcuffInfo()),
+        // ChangeNotifierProvider(create: (context) => Handcuff()),
+        ChangeNotifierProvider(create: (context) => HandcuffWatchdog()),
         ChangeNotifierProvider(create: (context) => MQTTAppState()),
       ],
       child: MaterialApp(

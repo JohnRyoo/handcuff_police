@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../config/palette.dart';
 import '../service/handcuffInfo.dart';
-import 'login.dart';
 
 class HandcuffScreen extends StatefulWidget {
   const HandcuffScreen({Key? key}) : super(key: key);
@@ -16,9 +14,6 @@ class HandcuffScreen extends StatefulWidget {
 }
 
 class _HandcuffScreenState extends State<HandcuffScreen> {
-  late double _phoneWidth;
-  late double _phoneHeight;
-
   final _formKey = GlobalKey<FormState>();
 
   String serialNumber = '';
@@ -39,9 +34,6 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _phoneHeight = MediaQuery.of(context).size.height;
-    _phoneWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -68,39 +60,6 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
             },
             icon: const Icon(Icons.exit_to_app),
           ),
-          // PopupMenuButton(
-          //     icon: const Icon(
-          //       Icons.menu,
-          //       color: Palette.whiteTextColor,
-          //     ),
-          //     color: Palette.lightButtonColor,
-          //     onSelected: (item) => _selectedActionMenuItem(context, item),
-          //     itemBuilder: (context) => [
-          //       PopupMenuItem<HandcuffMenu>(
-          //           value: HandcuffMenu.logout,
-          //           child: Text(
-          //             "로그아웃",
-          //             style: GoogleFonts.notoSans(
-          //               textStyle: const TextStyle(
-          //                 color: Palette.darkTextColor,
-          //                 fontSize: 16,
-          //                 fontWeight: FontWeight.w600,
-          //               ),
-          //             ),
-          //           )),
-          //       PopupMenuItem<HandcuffMenu>(
-          //           value: HandcuffMenu.exit,
-          //           child: Text(
-          //             "앱 종료",
-          //             style: GoogleFonts.notoSans(
-          //               textStyle: const TextStyle(
-          //                 color: Palette.darkTextColor,
-          //                 fontSize: 16,
-          //                 fontWeight: FontWeight.w600,
-          //               ),
-          //             ),
-          //           ))
-          //     ]),
         ],
       ),
 
@@ -120,7 +79,7 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
 
             // copyright
             Positioned(
-              top: _phoneHeight - 40,
+              top: MediaQuery.of(context).size.height - 120,
               left: 0,
               right: 0,
 
@@ -144,7 +103,7 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
               ),
             ),
 
-            // 수갑, 수갑번호, 수갑번호확인, 등록하기
+            // 수갑이미지, 수갑번호, 수갑번호확인, 등록하기
             Positioned(
               child: SingleChildScrollView(
                 child: Center(
@@ -158,7 +117,7 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
                       // 수갑 이미지
                       Container(
                         height: 130,
-                        width: _phoneWidth - 40,
+                        width: MediaQuery.of(context).size.width - 40,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(25),
                           color: Palette.darkButtonColor,
@@ -310,7 +269,8 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
                       GestureDetector(
                         onTap: () {
                           if (_formKey.currentState!.validate()) {
-                            context.read<HandcuffInfo>().isHandcuffRegistered = true;
+                            // 임시 수갑 정보 추가
+                            context.read<HandcuffInfo>().addHandcuff(serialNumber);
                             Navigator.pop(context);
                           } else {
                             // ScaffoldMessenger.of(context)
@@ -327,7 +287,7 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
                           }
                         },
                         child: Container(
-                          width: _phoneWidth - 40,
+                          width: MediaQuery.of(context).size.width - 40,
                           height: 60,
                           decoration: BoxDecoration(
                             color: Palette.lightButtonColor,
@@ -360,21 +320,6 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
         ),
       ),
     );
-  }
-
-
-  void _selectedActionMenuItem(BuildContext context, item) {
-    switch (item) {
-      case HandcuffMenu.logout:
-      // 모든 페이지를 제거 후 지정한 페이지를 push
-        Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (route) => false);
-        break;
-      case HandcuffMenu.exit:
-        _exitApp();
-    }
   }
 
   Future _exitApp() async {
@@ -426,16 +371,5 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
             ],
           );
         });
-  }
-
-  void _showToast(String toastMessage) {
-    Fluttertoast.showToast(
-      msg: toastMessage,
-      gravity: ToastGravity.BOTTOM,
-      backgroundColor: Palette.lightButtonColor,
-      fontSize: 16,
-      textColor: Palette.darkTextColor,
-      toastLength: Toast.LENGTH_SHORT,
-    );
   }
 }

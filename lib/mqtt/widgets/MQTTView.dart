@@ -25,7 +25,7 @@ class _MQTTViewState extends State<MQTTView> {
     super.initState();
 
     /*
-    _hostTextControllesr.addListener(_printLatestValue);
+    _hostTextController.addListener(_printLatestValue);
     _messageTextController.addListener(_printLatestValue);
     _topicTextController.addListener(_printLatestValue);
 

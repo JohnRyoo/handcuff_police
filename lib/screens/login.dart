@@ -13,9 +13,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  late double _phoneWidth;
-  late double _phoneHeight;
-
   final _formKey = GlobalKey<FormState>();
 
   String userId = '';
@@ -30,8 +27,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _phoneHeight = MediaQuery.of(context).size.height;
-    _phoneWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: Palette.backgroundColor,
@@ -50,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
             // copyright
             Positioned(
-              top: _phoneHeight - 40,
+              top: MediaQuery.of(context).size.height - 40,
               left: 0,
               right: 0,
               child: Center(
@@ -80,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 110,
                     ),
                     SizedBox(
-                      width: _phoneWidth,
+                      width: MediaQuery.of(context).size.width,
                       child: Text(
                         'HANDCUFFS\nOPERATOR',
                         textAlign: TextAlign.center,
@@ -312,7 +307,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Center(
                             child: Center(
                               child: Text(
-                                '회원가입',
+                                '관리자등록',
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.notoSans(
                                     textStyle: const TextStyle(

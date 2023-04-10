@@ -17,11 +17,11 @@ class MapScreenStatus extends StatelessWidget {
   late GpsStatus gpsStatusFromMqtt;
   @override
   Widget build(BuildContext context) {
-    isHandcuffRegistered = context.watch<HandcuffInfo>().isHandcuffRegistered;
-    isHandcuffConnected = context.watch<HandcuffInfo>().isHandcuffConnected;
-    handcuffStatus = context.watch<HandcuffInfo>().handcuffStatus;
-    batteryLevel = context.watch<HandcuffInfo>().batteryLevel;
-    // gpsStatus = context.watch<HandcuffInfo>().gpsStatus;
+    // isHandcuffRegistered = context.watch<HandcuffInfo>().isHandcuffRegistered;
+    // isHandcuffConnected = context.watch<HandcuffInfo>().isHandcuffConnected;
+    // handcuffStatus = context.watch<HandcuffInfo>().handcuffStatus;
+    // batteryLevel = context.watch<HandcuffInfo>().batteryLevel;
+    // // gpsStatus = context.watch<HandcuffInfo>().gpsStatus;
     gpsStatusFromMqtt = context.watch<MQTTAppState>().gpsStatus;
 
     return Positioned(

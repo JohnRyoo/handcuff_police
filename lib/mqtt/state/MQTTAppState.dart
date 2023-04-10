@@ -23,22 +23,6 @@ class MQTTAppState with ChangeNotifier {
 
   List<LatLng> _handcuffTrackingPoints = []; // MQTT를 통해 수신된 수갑의 좌표를 저장
 
-
-  // void setReceivedText(String text) {
-  //   _receivedText = text;
-  //   _historyText = _historyText + '\n' + _receivedText;
-  //
-  //   print('Received Text ==> $text');
-  //
-  //   _latitude = double.tryParse(_receivedText.split(' ')[0])!;
-  //   _longitude = double.tryParse(_receivedText.split(' ')[1])!;
-  //
-  //
-  //   print('_latitude == == > $_latitude');
-  //   print('_longitude == == > $_longitude');
-  //   notifyListeners();
-  // }
-
   void setReceivedJsonString(String jsonString) {
 
     debugPrint('setReceivedJsonString with $jsonString');
@@ -60,7 +44,7 @@ class MQTTAppState with ChangeNotifier {
       // debugPrint("gpsStatus = GpsStatus.connected");
     }
 
-    // debugPrint("handcuffTrackingPoints = $_handcuffTrackingPoints");
+    debugPrint("handcuffTrackingPoints = $_handcuffTrackingPoints");
 
     notifyListeners();
   }
