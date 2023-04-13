@@ -62,7 +62,6 @@ class _MainPageScreenState extends State<MainPageScreen> {
     myMqttManager.connect();
   }
 
-
   @override
   void dispose() {
     // Borker와의 연결 해제
@@ -81,7 +80,6 @@ class _MainPageScreenState extends State<MainPageScreen> {
     myMqttAppState = Provider.of<MQTTAppState>(context);
     currentHandcuffInfo = Provider.of<HandcuffInfo>(context);
 
-
     debugPrint(
         "currentHandcuffInfo.handcuffs.length = ${currentHandcuffInfo.handcuffs.length}");
 
@@ -93,7 +91,8 @@ class _MainPageScreenState extends State<MainPageScreen> {
     // gpsStatusFromMqtt = context.watch<MQTTAppState>().gpsStatus;
     // numberOfRegisteredHandcuff = context.watch<HandcuffInfo>().numberOfRegisteredHandcuff;
 
-    List<LatLng> currentLocationList = context.watch<MQTTAppState>().getHandcuffTrackingPoints;
+    List<LatLng> currentLocationList =
+        context.watch<MQTTAppState>().getHandcuffTrackingPoints;
     // LatLng startLocation = context.watch<MQTTAppState>().startLocation;
     debugPrint("currentLocationList = $currentLocationList");
 
@@ -166,12 +165,15 @@ class _MainPageScreenState extends State<MainPageScreen> {
                     style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 60,
-                        color: Colors.yellowAccent),
+                        color: Palette.whiteTextColor),
                     children: <TextSpan>[
                       TextSpan(
                         // TODO : 전체 갯수에 대해 확인 후 수정할 것
                         text: '/${maxHandcuffs.toString().padLeft(2, '0')}',
-                        style: TextStyle(fontSize: 30, color: Colors.white),
+                        style: const TextStyle(
+                          fontSize: 30,
+                          color: Palette.whiteTextColor,
+                        ),
                       ),
                     ])),
               ),

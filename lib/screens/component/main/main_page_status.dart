@@ -173,7 +173,7 @@ class _MainPageStatusState extends State<MainPageStatus> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     const SizedBox(
-                      width: 30,
+                      width: 80,
                     ),
                     const Icon(
                       Icons.delete,
@@ -181,7 +181,7 @@ class _MainPageStatusState extends State<MainPageStatus> {
                       color: Colors.white,
                     ),
                     const SizedBox(
-                      width: 30,
+                      width: 100,
                     ),
                     Text(
                       '삭제',

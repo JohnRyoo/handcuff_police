@@ -17,6 +17,8 @@ const String brokerAddress = "13.124.88.113";
 
 class HandcuffInfo with ChangeNotifier {
   final List<Handcuff> handcuffs = <Handcuff>[];
+  MQTTAppState mqttAppState = MQTTAppState();
+
   // final HandcuffWatchdog handcuffWatchdog = HandcuffWatchdog();
 
   // final List<MQTTManager> mqttManagers = <MQTTManager>[];
@@ -33,7 +35,7 @@ class HandcuffInfo with ChangeNotifier {
 
   void addHandcuff(String serialNumber) {
     // Handcuff handcuff = Handcuff(watchdog:handcuffWatchdog);
-    Handcuff handcuff = Handcuff();
+    Handcuff handcuff = Handcuff(mqttAppState: mqttAppState);
 
     handcuff.serialNumber = serialNumber;
     handcuff.mqttConnect();
@@ -71,6 +73,10 @@ class Handcuff {
   //
   // Handcuff({required HandcuffWatchdog watchdog})
   //     : _handcuffWatchdog = watchdog;
+
+  final MQTTAppState _mqttAppState;
+  Handcuff({required MQTTAppState mqttAppState})
+      : _mqttAppState = mqttAppState;
 
   String serialNumber = '';
   late MQTTManager mqttManager;
