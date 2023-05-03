@@ -53,8 +53,6 @@ class _MainPageScreenState extends State<MainPageScreen> {
   Widget build(BuildContext context) {
     debugPrint("Execute main_page build!!!!!!");
 
-    // String userId = guardInfo.id;
-
     _handcuffsMap = _handcuffInfo.getHandcuffsMap();
     debugPrint('_handcuffs Length = ${_handcuffsMap.length}');
 

@@ -205,7 +205,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
         ),
         centerTitle: true,
         title: Text(
-          serialNumber,
+          userId,
           style: const TextStyle(color: Palette.whiteTextColor),
         ),
         actions: [
