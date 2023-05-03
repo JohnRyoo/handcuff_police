@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:police/screens/main_page.dart';
-import 'package:police/screens/signup.dart';
-import 'package:getwidget/getwidget.dart';
+import 'package:police/service/guardInfo.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/palette.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -14,6 +14,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
+
+  GuardInfo guardInfo = Get.find();
 
   String userId = '';
   String userPassword = '';
@@ -27,7 +29,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: Palette.backgroundColor,
       body: GestureDetector(
@@ -236,14 +237,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       // width: _phoneWidth,
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: GestureDetector(
-                        onTap: () {
+                        onTap: () async {
                           if (_formKey.currentState!.validate()) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) {
-                                return MainPageScreen();
-                              }),
-                            );
+                            // Navigator.pushReplacement(
+                            //   context,
+                            //   MaterialPageRoute(builder: (context) {
+                            //     return MainPageScreen();
+                            //   }),
+                            // );
+                            SharedPreferences pref =
+                                await SharedPreferences.getInstance();
+                            List<String>? handcuffList =
+                                pref.getStringList("HandcuffList") ?? []; // null 인 경우 []
+
+                            guardInfo.id = userId;
+                            Get.offNamed("/mainpage", arguments: userId);
                           } else {
                             // ScaffoldMessenger.of(context)
                             //     .showSnackBar(const SnackBar(
@@ -293,10 +301,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: GestureDetector(
                         onTap: () {
-                          Navigator.push(context,
-                              MaterialPageRoute(builder: (context) {
-                            return SignupScreen();
-                          }));
+                          // Navigator.push(context,
+                          //     MaterialPageRoute(builder: (context) {
+                          //   return SignupScreen();
+                          // }));
+                          Get.toNamed("/signup");
                         },
                         child: Container(
                           height: 60,

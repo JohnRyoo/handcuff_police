@@ -1,22 +1,23 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:location/location.dart';
+import 'package:mqtt_client/mqtt_client.dart';
+import 'package:police/mqtt/MQTTManager.dart';
 import 'package:police/screens/component/map/map_screen_status.dart';
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 
-import 'package:provider/provider.dart';
 import '../config/palette.dart';
-import '../mqtt/MQTTManager.dart';
-import '../mqtt/state/MQTTAppState.dart';
 import 'package:wakelock/wakelock.dart';
 
+import '../service/guardInfo.dart';
 import '../service/handcuffInfo.dart';
+
+enum FocusedPosition { police, handcuff }
 
 class HandcuffOnMap extends StatefulWidget {
   const HandcuffOnMap({Key? key}) : super(key: key);
@@ -26,28 +27,22 @@ class HandcuffOnMap extends StatefulWidget {
 }
 
 class _HandcuffOnMapState extends State<HandcuffOnMap> {
-  late MQTTAppState currentMqttAppState;
-  late MQTTManager manager;
+  final HandcuffInfo _handcuffInfo = Get.find();
+  // final MQTTAppState _mqttAppState = Get.find();
+  final GuardInfo _guardInfo = Get.find();
 
-  late bool isHandcuffRegistered;
-  late bool isHandcuffConnected;
-  late HandcuffStatus handcuffStatus;
-  late BatteryLevel batteryLevel;
-  // late GpsStatus gpsStatus;
-  late GpsStatus gpsStatusFromMqtt;
+  late MQTTManager _mqttManager;
 
   // 어플리케이션에서 지도를 이동하기 위한 컨트롤러
   final Completer<GoogleMapController> _controller = Completer();
 
-  String userId = 'ID_0001';
+  late String userId;
+  late String serialNumber;
 
   double _currentZoomValue = 16.5;
 
   LocationData? currentLocation;
   LocationData? startLocation;
-  List<LatLng> policeTrackingPoints = []; // 스마트폰에서 식별된 GPS 좌표를 저장
-  List<LatLng> handcuffTrackingPoints = []; // MQTT를 통해 수신된 수갑의 좌표를 저장
-  List<LatLng> handcuffTrackingPoints2 = []; // MQTT를 통해 수신된 수갑의 좌표를 저장
 
   BitmapDescriptor startIcon = BitmapDescriptor.defaultMarker;
   BitmapDescriptor handcuffIcon = BitmapDescriptor.defaultMarker;
@@ -55,54 +50,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
 
   late StreamSubscription<LocationData> locationSubscription;
 
-  void getCurrentLocation() async {
-    Location location = Location();
-
-    // 앱이 백그라운드에 있을 때도 location을 받을 수 있도록 enable
-    location.enableBackgroundMode(enable: true);
-
-    location.getLocation().then(
-      (location) {
-        currentLocation = location;
-        // startLocation = location;
-        debugPrint("First currentLocation = $currentLocation");
-
-        policeTrackingPoints.add(
-          LatLng(location.latitude as double, location.longitude as double),
-        );
-        setState(() {});
-      },
-    );
-
-    GoogleMapController googleMapController = await _controller.future;
-
-    locationSubscription = location.onLocationChanged.listen(
-      (newLocation) {
-        currentLocation = newLocation;
-        setCustomMarkerIcon();
-
-        policeTrackingPoints.add(
-          LatLng(
-              newLocation.latitude as double, newLocation.longitude as double),
-        );
-
-        googleMapController.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: LatLng(
-                newLocation.latitude!,
-                newLocation.longitude!,
-              ),
-              zoom: _currentZoomValue,
-            ),
-          ),
-        );
-        if (mounted) {
-          setState(() {});
-        }
-      },
-    );
-  }
+  FocusedPosition focusedPosition = FocusedPosition.police;
 
   void setCustomMarkerIcon() {
     BitmapDescriptor.fromAssetImage(
@@ -111,34 +59,33 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
       startIcon = icon;
     });
 
-    if (isHandcuffRegistered == true) {
-      if (isHandcuffConnected == true) {
-        if (handcuffStatus == HandcuffStatus.normal) {
-          BitmapDescriptor.fromAssetImage(
-                  ImageConfiguration.empty, "images/on_normal.png")
-              .then(
-            (icon) {
-              handcuffIcon = icon;
-            },
-          );
-        } else {
-          BitmapDescriptor.fromAssetImage(
-                  ImageConfiguration.empty, "images/on_runaway.png")
-              .then(
-            (icon) {
-              handcuffIcon = icon;
-            },
-          );
-        }
+    if (_handcuffInfo.getHandcuff(serialNumber).isHandcuffConnected) {
+      if (_handcuffInfo.getHandcuff(serialNumber).handcuffStatus ==
+          HandcuffStatus.normal) {
+        BitmapDescriptor.fromAssetImage(
+                ImageConfiguration.empty, "images/on_normal.png")
+            .then(
+          (icon) {
+            handcuffIcon = icon;
+          },
+        );
       } else {
         BitmapDescriptor.fromAssetImage(
-                ImageConfiguration.empty, "images/off.png")
+                ImageConfiguration.empty, "images/on_runaway.png")
             .then(
           (icon) {
             handcuffIcon = icon;
           },
         );
       }
+    } else {
+      BitmapDescriptor.fromAssetImage(
+              ImageConfiguration.empty, "images/off.png")
+          .then(
+        (icon) {
+          handcuffIcon = icon;
+        },
+      );
     }
 
     BitmapDescriptor.fromAssetImage(ImageConfiguration.empty, "images/me.png")
@@ -155,21 +102,64 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
   final CountDownController _countDownController = CountDownController();
   bool isAlarmOn = false;
 
-  // ***************************************************************************
-  // ************************* MQTT ************************************
-  // ***************************************************************************
+  void getCurrentLocation() async {
+    Location location = Location();
 
-  void mqttConnect() {
-    var randomId = Random().nextInt(1000) + 1;
-    manager = MQTTManager(
-        host: "13.124.88.113",
-        // host: "192.168.0.7",
-        topic: "ID0001",
-        identifier: 'CJS_HandcuffTest_$randomId',
-        state: currentMqttAppState);
-    manager.initializeMQTTClient();
-    manager.receiveDataFromHandcuff = true;
-    manager.connect();
+    // 앱이 백그라운드에 있을 때도 location을 받을 수 있도록 enable
+    location.enableBackgroundMode(enable: true);
+
+    location.getLocation().then(
+      (location) {
+        currentLocation = location;
+        // startLocation = location;
+        debugPrint("First currentLocation = $currentLocation");
+
+        _guardInfo.addTrackingPoints(
+            LatLng(location.latitude as double, location.longitude as double));
+        setState(() {});
+      },
+    );
+
+    GoogleMapController googleMapController = await _controller.future;
+
+    locationSubscription = location.onLocationChanged.listen(
+      (newLocation) {
+        currentLocation = newLocation;
+        setCustomMarkerIcon();
+
+        _guardInfo.addTrackingPoints(LatLng(
+            newLocation.latitude as double, newLocation.longitude as double));
+
+        debugPrint(
+            '[map_screen] guardInfo.trackingPoints = $_guardInfo.trackingPoints');
+
+        if (focusedPosition == FocusedPosition.police) {
+          googleMapController.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: LatLng(
+                  newLocation.latitude!,
+                  newLocation.longitude!,
+                ),
+                zoom: _currentZoomValue,
+              ),
+            ),
+          );
+        } else {
+          googleMapController.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: _handcuffInfo.getHandcuff(serialNumber).lastLocation,
+                zoom: _currentZoomValue,
+              ),
+            ),
+          );
+        }
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
   }
 
   @override
@@ -177,9 +167,14 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
     getCurrentLocation();
     // 수행 중 화면이 꺼지지 않도록 설정
     Wakelock.enable();
+
+    userId = _guardInfo.id;
+    serialNumber = Get.arguments['serialNumber'];
+    _mqttManager = Get.arguments['mqttManager'];
+
     super.initState();
 
-    debugPrint("==== 01 initState()");
+    debugPrint("[map_screen] initState()");
   }
 
   @override
@@ -198,39 +193,6 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
   // ***************************************************************************
   @override
   Widget build(BuildContext context) {
-    currentMqttAppState = Provider.of<MQTTAppState>(context);
-
-    // Keep a reference to the app state.
-    // WidgetsBinding.instance!.addPostFrameCallback((_) {
-    //   if (currentMqttAppState.getAppConnectionState ==
-    //       MQTTAppConnectionState.disconnected) {
-    //     debugPrint("run MQTT CONNECT!");
-    //     mqttConnect();
-    //   }
-    // });
-
-    handcuffTrackingPoints = List.from(currentMqttAppState.getHandcuffTrackingPoints);
-    // handcuffTrackingPoints = currentMqttAppState.getHandcuffTrackingPoints;
-    // if (handcuffTrackingPoints.isNotEmpty) {
-    //   for (int i=0; i<handcuffTrackingPoints.length; i++) {
-    //     handcuffTrackingPoints2[i] = handcuffTrackingPoints[i];
-    //   }
-    // }
-
-    debugPrint("handcuffTrackingPoints = $handcuffTrackingPoints");
-    debugPrint(
-        "handcuff latitude = ${currentMqttAppState.receivedLastLatitude}");
-    debugPrint(
-        "handcuff longitude = ${currentMqttAppState.receivedLastLongitude}");
-    // debugPrint("currentMqttAppState.getHandcuffTrackingPoints = ${currentMqttAppState.getHandcuffTrackingPoints}");
-
-    // isHandcuffRegistered = context.watch<HandcuffInfo>().isHandcuffRegistered;
-    // isHandcuffConnected = context.watch<HandcuffInfo>().isHandcuffConnected;
-    // handcuffStatus = context.watch<HandcuffInfo>().handcuffStatus;
-    // batteryLevel = context.watch<HandcuffInfo>().batteryLevel;
-    // // gpsStatus = context.watch<HandcuffInfo>().gpsStatus;
-    gpsStatusFromMqtt = context.watch<MQTTAppState>().gpsStatus;
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -243,7 +205,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
         ),
         centerTitle: true,
         title: Text(
-          userId,
+          serialNumber,
           style: const TextStyle(color: Palette.whiteTextColor),
         ),
         actions: [
@@ -272,16 +234,22 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                           currentLocation!.longitude!),
                       zoom: 16.5),
                   polylines: {
+                    if (_handcuffInfo.getHandcuff(serialNumber).gpsStatus == GpsStatus.connected)
                     // Polyline(
                     //   polylineId: const PolylineId("policeTracking"),
-                    //   points: policeTrackingPoints,
+                    //   points: _guardInfo.trackingPoints,
                     //   color: Colors.brown.shade300,
                     //   width: 5,
                     // ),
                     Polyline(
                       polylineId: const PolylineId("handcuffTracking"),
-                      points: handcuffTrackingPoints,
-                      color: (handcuffStatus == HandcuffStatus.runAway)
+                      points: _handcuffInfo
+                          .getHandcuff(serialNumber)
+                          .trackingPoints,
+                      color: (_handcuffInfo
+                                  .getHandcuff(serialNumber)
+                                  .handcuffStatus ==
+                              HandcuffStatus.runAway)
                           ? Colors.redAccent
                           : Colors.lightBlue,
                       width: 7,
@@ -302,9 +270,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                     Marker(
                       markerId: const MarkerId("handcuffLocation"),
                       icon: handcuffIcon,
-                      position: LatLng(
-                          currentMqttAppState.receivedLastLatitude,
-                          currentMqttAppState.receivedLastLongitude),
+                      position: _handcuffInfo
+                          .getHandcuff(serialNumber).lastLocation
                     ),
                     Marker(
                       markerId: const MarkerId("policeLocation"),
@@ -312,13 +279,14 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                       position: LatLng(currentLocation!.latitude!,
                           currentLocation!.longitude!),
                     ),
+                    if (_handcuffInfo.getHandcuff(serialNumber).gpsStatus == GpsStatus.connected)
                     Marker(
                       markerId: const MarkerId("start"),
                       icon: startIcon,
-                      position: LatLng(
-                        currentMqttAppState.startLocation.latitude,
-                        currentMqttAppState.startLocation.longitude,
-                      ),
+                      position: _handcuffInfo
+                          .getHandcuff(serialNumber)
+                          .trackingPoints
+                          .first,
                     )
                   },
                   onTap: (cordinate) {
@@ -328,7 +296,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                 ),
 
           // ON, 상, 마지막 위치 표시
-          MapScreenStatus(),
+          MapScreenStatus(serialNumber: serialNumber,),
+
           // 아래쪽 세개의 버튼
           Positioned(
             top: MediaQuery.of(context).size.height - 200,
@@ -341,21 +310,22 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                   GestureDetector(
                     onTap: () {
                       _displayMyPosition();
+                      setState(() {});
                     },
                     child: Container(
                       padding: const EdgeInsets.all(0),
-                      height: 60,
-                      width: 60,
+                      height: 65,
+                      width: 65,
                       decoration: BoxDecoration(
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(50),
                       ),
                       child: const Center(
                         child: Text(
-                          "ME",
+                          "내위치",
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 16,
+                            fontSize: 15,
                           ),
                         ),
                       ),
@@ -366,20 +336,22 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                       if (!isAlarmOn) {
                         isAlarmOn = true;
                         _countDownController.start();
+                        _mqttManager.publishToHandcuff(serialNumber, '6 $serialNumber 1');
                       } else {
                         isAlarmOn = false;
                         _countDownController.reset();
+                        _mqttManager.publishToHandcuff(serialNumber, '6 $serialNumber 0');
                       }
 
-                      print("Alarm ON at Handcuff!!");
+                      debugPrint("Alarm ON at Handcuff!!");
                     },
                     child: CircularCountDownTimer(
                       duration: _duration,
                       initialDuration: 0,
                       controller: _countDownController,
-                      height: 60,
-                      width: 60,
-                      ringColor: Colors.blue,
+                      height: 59,
+                      width: 59,
+                      ringColor: Palette.lightButtonColor,
                       ringGradient: null,
                       fillColor: Colors.black,
                       fillGradient: null,
@@ -390,7 +362,6 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                       textStyle: const TextStyle(
                         fontSize: 15.0,
                         color: Colors.white,
-                        // fontWeight: FontWeight.bold,
                       ),
                       textFormat: CountdownTextFormat.S,
                       isReverse: true,
@@ -402,6 +373,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                       },
                       onComplete: () {
                         debugPrint('Countdown End!!!!');
+                        _mqttManager.publishToHandcuff(serialNumber, '6 $serialNumber 0');
                       },
                       onChange: (String timeStamp) {
                         debugPrint('Countdown Changed $timeStamp');
@@ -411,7 +383,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                         if (duration.inSeconds == _duration ||
                             duration.inSeconds == 0) {
                           // return '\u{2795}'; // unicode emoji U+1F6B7
-                          return 'ALARM';
+                          return '알람';
                         } else {
                           return Function.apply(
                               defaultFormatterFunction, [duration]);
@@ -421,20 +393,21 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      // _displayHandcuffPosition();
+                      _displayHandcuffPosition();
+                      setState(() {});
                     },
                     child: Container(
                       padding: const EdgeInsets.all(0),
-                      height: 60,
-                      width: 60,
+                      height: 65,
+                      width: 65,
                       decoration: BoxDecoration(
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(50),
                       ),
                       child: const Center(
                         child: Text(
-                          "ON",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          "수갑위치",
+                          style: TextStyle(color: Colors.white, fontSize: 15),
                         ),
                       ),
                     ),
@@ -455,7 +428,26 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
         LatLng(currentLocation!.latitude!, currentLocation!.longitude!),
       ),
     );
+    focusedPosition = FocusedPosition.police;
   }
+
+  Future<void> _displayHandcuffPosition() async {
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(
+      CameraUpdate.newLatLng(
+        _handcuffInfo.getHandcuff(serialNumber).lastLocation,
+      ),
+    );
+    focusedPosition = FocusedPosition.handcuff;
+  }
+
+  // void _displayMyPosition() {
+  //   focusedPosition = FocusedPosition.POLICE;
+  // }
+
+  // void _displayHandcuffPosition() {
+  //   focusedPosition = FocusedPosition.HANDCUFF;
+  // }
 
   Future _exitApp() async {
     return await showDialog(

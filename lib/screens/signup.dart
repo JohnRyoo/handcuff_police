@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../config/palette.dart';
@@ -325,7 +327,8 @@ class _SignupScreenState extends State<SignupScreen> {
                             //     return MainPageScreen();
                             //   }),
                             // );
-                            Navigator.pop(context);
+                            // Navigator.pop(context);
+                            Get.back();
                           } else {
                             // ScaffoldMessenger.of(context)
                             //     .showSnackBar(const SnackBar(

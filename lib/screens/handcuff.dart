@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
+import 'package:police/mqtt/MQTTManager.dart';
+import 'package:police/service/guardInfo.dart';
 
 import '../config/palette.dart';
+import '../mqtt/state/MQTTAppState.dart';
 import '../service/handcuffInfo.dart';
 
 class HandcuffScreen extends StatefulWidget {
-  const HandcuffScreen({Key? key}) : super(key: key);
+  const HandcuffScreen({
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<HandcuffScreen> createState() => _HandcuffScreenState();
@@ -16,12 +21,18 @@ class HandcuffScreen extends StatefulWidget {
 class _HandcuffScreenState extends State<HandcuffScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  final HandcuffInfo _handcuffInfo = Get.find();
+  final MQTTAppState _mqttAppState = Get.find();
+  final GuardInfo _guardInfo = Get.find();
+
+  final MQTTManager _mqttManager = Get.arguments;
+
   String serialNumber = '';
   String serialNumberConfirm = '';
   TextEditingController serialNumberController = TextEditingController();
   TextEditingController serialNumberConfirmController = TextEditingController();
 
-  String userId = 'ID_0001';
+  // String userId = Get.arguments;
 
   late double originalHeight;
 
@@ -50,7 +61,7 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
         // ),
         centerTitle: true,
         title: Text(
-          userId,
+          _guardInfo.id,
           style: const TextStyle(color: Palette.whiteTextColor),
         ),
         actions: [
@@ -64,6 +75,10 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
       ),
 
       // resizeToAvoidBottomInset: false,
+      // todo: 키보드가 올라오거나 내려감에 의해 이벤트가 발생하는 것을 방지하기 위해
+      //  resizeToAvoidBottomInset를 지정해도 계속되는 것은
+      //  mediaquery도 영향을 받아서 이다.
+      //  이를 해결하기 위해서는 sizer package를 이용하여 해결해야 한다.
       body: GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();
@@ -82,7 +97,6 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
               top: MediaQuery.of(context).size.height - 120,
               left: 0,
               right: 0,
-
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -270,8 +284,10 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
                         onTap: () {
                           if (_formKey.currentState!.validate()) {
                             // 임시 수갑 정보 추가
-                            context.read<HandcuffInfo>().addHandcuff(serialNumber);
-                            Navigator.pop(context);
+                            _handcuffInfo.addHandcuff(serialNumber);
+                            // 등록된 수갑의 serial 번호로 subscription
+                            _mqttManager.subscribe(serialNumber);
+                            Get.back();
                           } else {
                             // ScaffoldMessenger.of(context)
                             //     .showSnackBar(const SnackBar(

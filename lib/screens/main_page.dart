@@ -1,21 +1,15 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:police/config/palette.dart';
-import 'package:police/screens/component/main/handcuff_add.dart';
 import 'package:police/screens/component/main/main_page_status.dart';
-import 'package:provider/provider.dart';
-
+import 'package:police/service/guardInfo.dart';
 import '../mqtt/MQTTManager.dart';
 import '../mqtt/state/MQTTAppState.dart';
 import '../service/handcuffInfo.dart';
-import 'handcuff.dart';
-import 'login.dart';
-import 'mqtt_screen.dart';
 
 class MainPageScreen extends StatefulWidget {
   const MainPageScreen({Key? key}) : super(key: key);
@@ -25,106 +19,68 @@ class MainPageScreen extends StatefulWidget {
 }
 
 class _MainPageScreenState extends State<MainPageScreen> {
-  // 경찰 본인의 정보를 송수신하기 위한 Broker 연결
-  MQTTAppState myMqttAppState = MQTTAppState();
-  late MQTTManager myMqttManager;
+  final HandcuffInfo _handcuffInfo = Get.find();
+  final MQTTAppState mqttAppState = Get.find();
+  final GuardInfo guardInfo = Get.find();
 
-  // 재소자 수갑에 대한 정보 관리
-  late HandcuffInfo currentHandcuffInfo;
+  int maxHandcuffs = 3;
+  late MQTTManager manager;
+  late RxMap<String, Handcuff> _handcuffsMap;
 
-  // late bool isHandcuffRegistered;
-  // late bool isHandcuffConnected;
-  // late HandcuffStatus handcuffStatus;
-  // late BatteryLevel batteryLevel;
-  //
-  // // late GpsStatus gpsStatus;
-  // late GpsStatus gpsStatusFromMqtt;
-  // late int numberOfRegisteredHandcuff;
+  late String userId;
 
-  // bool isHandcuffRegistered = true; // 수갑 등록 여부
-  // bool isHandcuffConnected = true; // 수갑 등록 후 수갑과의 연결 여부
-  // GpsStatus gpsStatus = GpsStatus.disconnected; // 수갑 연결 후 GPS 연결
-  //
-  // BatteryLevel batteryLevel = BatteryLevel.high;
-  // HandcuffStatus handcuffStatus = HandcuffStatus.normal;
-
-  @override
-  void initState() {
-    // 경찰 자신의 스마트폰 위치를 전송하기 위한 Borker와의 연결
+  void mqttConnect(String topic) {
     var randomId = Random().nextInt(1000) + 1;
-    myMqttManager = MQTTManager(
+    manager = MQTTManager(
         host: "13.124.88.113",
-        topic: 'PI0001',
-        identifier: 'CPH_$randomId',
-        state: myMqttAppState);
-    myMqttManager.initializeMQTTClient();
-    myMqttManager.receiveDataFromHandcuff = true;
-    myMqttManager.connect();
+        // host: "192.168.0.7",
+        topic: topic,
+        identifier: 'CJS_HandcuffTest_$randomId',
+        state: mqttAppState);
+    manager.initializeMQTTClient();
+    manager.connect();
   }
 
   @override
-  void dispose() {
-    // Borker와의 연결 해제
-    myMqttManager.disconnect();
+  void initState() {
+    userId = guardInfo.id;
+
+    debugPrint("run MQTT CONNECT for guard at main_page!!");
+    mqttConnect(userId);
   }
 
   @override
   Widget build(BuildContext context) {
-    String userId = 'PI0001';
-    String userName = '류호창';
-    String department = '경찰서 강력반';
+    debugPrint("Execute main_page build!!!!!!");
 
-    const int maxHandcuffs = 3;
-    debugPrint("Execute main_page build!!");
+    // String userId = guardInfo.id;
 
-    myMqttAppState = Provider.of<MQTTAppState>(context);
-    currentHandcuffInfo = Provider.of<HandcuffInfo>(context);
+    _handcuffsMap = _handcuffInfo.getHandcuffsMap();
+    debugPrint('_handcuffs Length = ${_handcuffsMap.length}');
 
-    debugPrint(
-        "currentHandcuffInfo.handcuffs.length = ${currentHandcuffInfo.handcuffs.length}");
+    debugPrint('handcuff list = $_handcuffInfo.getHandcuffsList()');
 
-    // isHandcuffRegistered = context.watch<HandcuffInfo>().isHandcuffRegistered;
-    // isHandcuffConnected = context.watch<HandcuffInfo>().isHandcuffConnected;
-    // handcuffStatus = context.watch<HandcuffInfo>().handcuffStatus;
-    // batteryLevel = context.watch<HandcuffInfo>().batteryLevel;
-    // // gpsStatus = context.watch<HandcuffInfo>().gpsStatus;
-    // gpsStatusFromMqtt = context.watch<MQTTAppState>().gpsStatus;
-    // numberOfRegisteredHandcuff = context.watch<HandcuffInfo>().numberOfRegisteredHandcuff;
+    double boxSize() {
+      debugPrint(
+          '[main_page] guardInfo.isConnected.isTrue = ${guardInfo.isConnected.value}!');
+      if (guardInfo.isConnected.isTrue) {
+        debugPrint(
+            '[main_page] guardInfo.isConnected.isTrue = ${guardInfo.isConnected.value}!');
+        _handcuffInfo.getHandcuffsList().forEach((handcuff) {
+          if (!handcuff.isSubscribed) {
+            debugPrint('[main_page] Subscribe $handcuff.serialNumber');
+            manager.subscribe(handcuff.serialNumber);
+          }
+        });
+      }
 
-    List<LatLng> currentLocationList =
-        context.watch<MQTTAppState>().getHandcuffTrackingPoints;
-    // LatLng startLocation = context.watch<MQTTAppState>().startLocation;
-    debugPrint("currentLocationList = $currentLocationList");
-
-    // 경찰 자신의 스마트폰 위치를 전송하기 위한 Borker와의 연결
-    // if (context
-    //     .watch<HandcuffInfo>()
-    //     .handcuffs
-    //     .isNotEmpty) {
-    //   WidgetsBinding.instance!.addPostFrameCallback((_) {
-    //     if (myMqttAppState.getAppConnectionState ==
-    //         MQTTAppConnectionState.disconnected) {
-    //       debugPrint("MQTT CONNECT with $userId at main_page!!");
-    //       // police ID로 우선 브로커와 연결
-    //       mqttConnect(userId);
-    //     }
-    //   });
-    // }
-
-    // Color nameColor = Palette.lightButtonColor;
+      return 50;
+    }
 
     return Scaffold(
       backgroundColor: Palette.backgroundColor,
       appBar: AppBar(
         backgroundColor: Palette.backgroundColor,
-        // 메인화면은 로그인 화면이 제거된 후 생성되므로 돌아갈 곳이 없음
-        // leading: IconButton(
-        //   onPressed: () {
-        //     Navigator.pop(context);
-        //   },
-        //   icon: const Icon(Icons.arrow_back_ios),
-        //   color: Palette.whiteTextColor,
-        // ),
         centerTitle: true,
         title: Text(
           userId,
@@ -133,7 +89,7 @@ class _MainPageScreenState extends State<MainPageScreen> {
         actions: [
           IconButton(
             onPressed: () {
-              // _exitApp();
+              _exitApp();
             },
             icon: const Icon(Icons.exit_to_app),
           ),
@@ -158,90 +114,105 @@ class _MainPageScreenState extends State<MainPageScreen> {
                 color: Palette.darkButtonColor,
               ),
               child: Center(
-                child: Text.rich(TextSpan(
-                    text: currentHandcuffInfo.handcuffs.length
-                        .toString()
-                        .padLeft(2, '0'),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 60,
-                        color: Palette.whiteTextColor),
-                    children: <TextSpan>[
-                      TextSpan(
-                        // TODO : 전체 갯수에 대해 확인 후 수정할 것
-                        text: '/${maxHandcuffs.toString().padLeft(2, '0')}',
-                        style: const TextStyle(
-                          fontSize: 30,
-                          color: Palette.whiteTextColor,
+                child: Obx(
+                  () => Text.rich(
+                    TextSpan(
+                      text: _handcuffInfo
+                          .getNumberOfHandcuffs()
+                          .toString()
+                          .padLeft(2, '0'),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 60,
+                          color: Palette.whiteTextColor),
+                      children: <TextSpan>[
+                        TextSpan(
+                          // TODO : 전체 갯수에 대해 확인 후 수정할 것
+                          text: '/${maxHandcuffs.toString().padLeft(2, '0')}',
+                          style: const TextStyle(
+                            fontSize: 30,
+                            color: Palette.whiteTextColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(
+              height: 30,
+            ),
+
+            MainPageStatus(mqttManager: manager),
+
+            const SizedBox(
+              height: 30,
+            ),
+
+            Obx(
+              () => Container(
+                child: Column(
+                  children: [
+                    // 수갑 등록 최대 갯수 이하인 경우 등록 버튼을 보여줌
+                    if (_handcuffInfo.getNumberOfHandcuffs() < maxHandcuffs)
+                      SizedBox(
+                        child: GestureDetector(
+                          onTap: () {
+                            Get.toNamed('/handcuff', arguments: manager);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(0),
+                            height: 60,
+                            width: 60,
+                            decoration: BoxDecoration(
+                              color: Color(0xff00e693),
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: const Icon(
+                                Icons.add,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ])),
-              ),
-            ),
-            const SizedBox(
-              height: 30,
-            ),
-            MainPageStatus(),
-            const SizedBox(
-              height: 30,
-            ),
-
-            // 수갑 등록 최대 갯수 이하인 경우 등록 버튼을 보여줌
-            if (currentHandcuffInfo.handcuffs.length < maxHandcuffs)
-              SizedBox(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return HandcuffScreen();
-                    }));
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(0),
-                    height: 60,
-                    width: 60,
-                    decoration: BoxDecoration(
-                      color: Color(0xff00e693),
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
+                    // 등록된 수갑의 갯수가 최대치를 넘어가면 등록버튼을 disable
+                    if (_handcuffInfo.getNumberOfHandcuffs() >= maxHandcuffs)
+                      SizedBox(
+                        child: Container(
+                          padding: const EdgeInsets.all(0),
+                          height: 60,
+                          width: 60,
+                          decoration: BoxDecoration(
+                            color: Palette.darkButtonColor,
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: const Icon(
+                              Icons.clear,
+                              color: Palette.darkTextColor,
+                            ),
+                          ),
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.add,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
+                  ],
                 ),
               ),
-
-            // 등록된 수갑의 갯수가 최대치를 넘어가면 등록버튼을 disable
-            if (currentHandcuffInfo.handcuffs.length >= maxHandcuffs)
-              SizedBox(
-                child: Container(
-                  padding: const EdgeInsets.all(0),
-                  height: 60,
-                  width: 60,
-                  decoration: BoxDecoration(
-                    color: Palette.darkButtonColor,
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: const Icon(
-                      Icons.clear,
-                      color: Palette.darkTextColor,
-                    ),
-                  ),
-                ),
-              ),
-            const SizedBox(
-              height: 50,
             ),
+
+            // Guard의 connection이 되면 바로 등록된 수갑의 subscribe을 진행
+            Obx(() => SizedBox(
+                  height: guardInfo.isConnected.isTrue ? boxSize() : boxSize(),
+                )),
           ],
         ),
       ),

@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 
 import '../../../config/palette.dart';
 import '../../../mqtt/state/MQTTAppState.dart';
+import '../../../service/guardInfo.dart';
 import '../../../service/handcuffInfo.dart';
 
 class MapScreenStatus extends StatelessWidget {
-  MapScreenStatus({Key? key}) : super(key: key);
+  MapScreenStatus({Key? key, required this.serialNumber})
+      : super(key: key);
 
-  late bool isHandcuffRegistered;
+  final String serialNumber;
+
+  final HandcuffInfo _handcuffInfo = Get.find();
+  final MQTTAppState _mqttAppState = Get.find();
+  final GuardInfo _guardInfo = Get.find();
+
   late bool isHandcuffConnected;
   late HandcuffStatus handcuffStatus;
   late BatteryLevel batteryLevel;
-  // late GpsStatus gpsStatus;
-  late GpsStatus gpsStatusFromMqtt;
+  late GpsStatus gpsStatus;
+
   @override
   Widget build(BuildContext context) {
-    // isHandcuffRegistered = context.watch<HandcuffInfo>().isHandcuffRegistered;
-    // isHandcuffConnected = context.watch<HandcuffInfo>().isHandcuffConnected;
-    // handcuffStatus = context.watch<HandcuffInfo>().handcuffStatus;
-    // batteryLevel = context.watch<HandcuffInfo>().batteryLevel;
-    // // gpsStatus = context.watch<HandcuffInfo>().gpsStatus;
-    gpsStatusFromMqtt = context.watch<MQTTAppState>().gpsStatus;
+    Handcuff handcuff = _handcuffInfo.getHandcuff(serialNumber);
+    isHandcuffConnected = handcuff.isHandcuffConnected;
+    handcuffStatus = handcuff.handcuffStatus;
+    batteryLevel = handcuff.batteryLevel;
+    gpsStatus = handcuff.gpsStatus;
 
     return Positioned(
       top: 20,
@@ -32,10 +38,10 @@ class MapScreenStatus extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 20.0),
         decoration: BoxDecoration(
           color: !isHandcuffConnected
-                  ? Colors.black
-                    : (handcuffStatus == HandcuffStatus.runAway)
-                      ? Palette.emergencyColor
-                        : Palette.lightButtonColor,
+              ? Colors.black
+              : (handcuffStatus == HandcuffStatus.runAway)
+                  ? Palette.emergencyColor
+                  : Palette.lightButtonColor,
           borderRadius: BorderRadius.circular(25),
         ),
         child: Row(
@@ -78,9 +84,10 @@ class MapScreenStatus extends StatelessWidget {
             TextButton(
               onPressed: () {},
               child: Text(
-                !isHandcuffConnected || gpsStatusFromMqtt == GpsStatus.disconnected
+                !isHandcuffConnected ||
+                        gpsStatus == GpsStatus.disconnected
                     ? '마지막 위치'
-                    : gpsStatusFromMqtt == GpsStatus.connected
+                    : gpsStatus == GpsStatus.connected
                         ? '위치확인'
                         : '위치확인중...',
                 style: GoogleFonts.notoSans(

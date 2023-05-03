@@ -1,66 +1,129 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:mqtt_client/mqtt_client.dart';
 import 'package:police/service/handcuffInfo.dart';
+import '../../service/guardInfo.dart';
 import '../../service/handcuff_data.dart';
+import 'package:get/get.dart';
 
 enum MQTTAppConnectionState { connected, disconnected, connecting }
 
-class MQTTAppState with ChangeNotifier {
-  MQTTAppConnectionState _appConnectionState = MQTTAppConnectionState.disconnected;
-  String _receivedText = '';
-  String _historyText = '';
+class MQTTAppState extends GetxController {
+  MQTTAppConnectionState _appConnectionState =
+      MQTTAppConnectionState.disconnected;
 
-  late GpsStatus gpsStatus = GpsStatus.disconnected;
+  late HandcuffInfo _handcuffInfo;
+  late GuardInfo _guardInfo;
 
-  double _receivedLastLatitude = 0.0;
+  MQTTAppState() {
+    _handcuffInfo = Get.find();
+    _guardInfo = Get.find();
+  }
 
-  double get receivedLastLatitude => _receivedLastLatitude;
-  double _receivedLastLongitude = 0.0;
+  String _receivedSerialNumber = '';
+  double _receivedLatitude = 0.0;
+  double _receivedLongitude = 0.0;
+  String _receivedPowerStatus = '0';
 
-  LatLng _startLocation = const LatLng(0.0, 0.0);
+  void setReceivedText(String receivedString) {
+    debugPrint('=======================================================');
+    debugPrint('receivedString with $receivedString');
 
-  List<LatLng> _handcuffTrackingPoints = []; // MQTT를 통해 수신된 수갑의 좌표를 저장
+    List<String> handcuffData = receivedString.split(' ');
+    debugPrint('handcuffData = $handcuffData');
+
+    switch (handcuffData[0]) {
+      case '1': // power on
+        _receivedSerialNumber = handcuffData[1];
+        _receivedPowerStatus = handcuffData[2];
+
+        if (_receivedPowerStatus == '1') {
+          _handcuffInfo.setPowerMode(_receivedSerialNumber, true);
+        } else {
+          _handcuffInfo.setPowerMode(_receivedSerialNumber, false);
+        }
+
+        break;
+      case '2': // GPS data
+        _receivedSerialNumber = handcuffData[1];
+        _receivedLatitude = double.parse(handcuffData[2]);
+        _receivedLongitude = double.parse(handcuffData[3]);
+
+        // _handcuffInfo.setBatteryLevel('aaaaaaa', BatteryLevel.low);
+        // _handcuffInfo.setHandcuffStatus('aaaaaaa', HandcuffStatus.runAway);
+
+        if (_receivedLatitude.abs() == 0.abs()) {
+          _handcuffInfo.setGpsStatus(
+              _receivedSerialNumber, GpsStatus.connecting);
+          debugPrint("gpsStatus = GpsStatus.connecting");
+        } else {
+          _handcuffInfo
+              .getHandcuff(_receivedSerialNumber)
+              .addTrackingPoints(LatLng(_receivedLatitude, _receivedLongitude));
+          _handcuffInfo.setGpsStatus(
+              _receivedSerialNumber, GpsStatus.connected);
+          debugPrint("gpsStatus = GpsStatus.connected");
+        }
+
+        debugPrint(
+            "_handcuffInfo.getHandcuff($_receivedSerialNumber).trackingPoints = "
+            "${_handcuffInfo.getHandcuff(_receivedSerialNumber).trackingPoints}");
+
+        // notifyListeners();
+        update();
+        break;
+      default:
+    }
+  }
 
   void setReceivedJsonString(String jsonString) {
-
+    debugPrint('=======================================================');
     debugPrint('setReceivedJsonString with $jsonString');
 
     final jsonResponse = jsonDecode(jsonString);
     HandcuffData handcuffData = HandcuffData.fromJson(jsonResponse);
 
-    _receivedLastLatitude = handcuffData.locationMessage.latitude;
-    _receivedLastLongitude = handcuffData.locationMessage.longitude;
+    _receivedSerialNumber = handcuffData.locationMessage.serialNumber;
+    _receivedLatitude = handcuffData.locationMessage.latitude;
+    _receivedLongitude = handcuffData.locationMessage.longitude;
 
-    if (_receivedLastLatitude.abs() == 0.abs()) {
-      gpsStatus = GpsStatus.connecting;
-      // debugPrint("gpsStatus = GpsStatus.connecting");
+    // _handcuffInfo.setBatteryLevel('aaaaaaa', BatteryLevel.low);
+    // _handcuffInfo.setHandcuffStatus('aaaaaaa', HandcuffStatus.runAway);
+
+    if (_receivedLatitude.abs() == 0.abs()) {
+      _handcuffInfo.setGpsStatus(_receivedSerialNumber, GpsStatus.connecting);
+      debugPrint("gpsStatus = GpsStatus.connecting");
     } else {
-      _handcuffTrackingPoints.add(
-          LatLng(_receivedLastLatitude, _receivedLastLongitude));
-      _startLocation = _handcuffTrackingPoints[0];
-      gpsStatus = GpsStatus.connected;
-      // debugPrint("gpsStatus = GpsStatus.connected");
+      _handcuffInfo
+          .getHandcuff(_receivedSerialNumber)
+          .addTrackingPoints(LatLng(_receivedLatitude, _receivedLongitude));
+      _handcuffInfo.setGpsStatus(_receivedSerialNumber, GpsStatus.connected);
+      debugPrint("gpsStatus = GpsStatus.connected");
     }
 
-    debugPrint("handcuffTrackingPoints = $_handcuffTrackingPoints");
+    debugPrint(
+        "_handcuffInfo.getHandcuff($_receivedSerialNumber).trackingPoints = "
+        "${_handcuffInfo.getHandcuff(_receivedSerialNumber).trackingPoints}");
 
-    notifyListeners();
+    // notifyListeners();
+    update();
   }
 
   void setAppConnectionState(MQTTAppConnectionState state) {
     _appConnectionState = state;
-    notifyListeners();
+
+    debugPrint('[MQTTAppState] state = $state');
+    if (state == MQTTAppConnectionState.connected) {
+      _guardInfo.isConnected.value = true;
+    } else if (state == MQTTAppConnectionState.disconnected) {
+      _guardInfo.isConnected.value = false;
+    }
+
+    debugPrint(
+        '_guardInfo.isConnected.value = ${_guardInfo.isConnected.value}');
+    update();
   }
 
-  String get getReceivedText => _receivedText;
-  String get getHistoryText => _historyText;
-
-  LatLng get startLocation => _startLocation;
-  List<LatLng> get getHandcuffTrackingPoints => _handcuffTrackingPoints;
-
   MQTTAppConnectionState get getAppConnectionState => _appConnectionState;
-
-  double get receivedLastLongitude => _receivedLastLongitude;
 }

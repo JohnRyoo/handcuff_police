@@ -10,7 +10,6 @@ class MQTTManager {
   final String _identifier;
   final String _host;
   final String _topic;
-  bool receiveDataFromHandcuff = false;
 
   // Constructor
   // ignore: sort_constructors_first
@@ -66,10 +65,21 @@ class MQTTManager {
     _client!.disconnect();
   }
 
+  void subscribe(String topic) {
+    debugPrint('Subscribe');
+    _client!.subscribe(topic, MqttQos.atLeastOnce);
+  }
+
   void publish(String message) {
     final MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
     builder.addString(message);
     _client!.publishMessage(_topic, MqttQos.exactlyOnce, builder.payload!);
+  }
+
+  void publishToHandcuff(String serialNumber, String message) {
+    final MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
+    builder.addString(message);
+    _client!.publishMessage(serialNumber, MqttQos.exactlyOnce, builder.payload!);
   }
 
   /// The subscribed callback
@@ -93,7 +103,7 @@ class MQTTManager {
   void onConnected() {
     _currentState.setAppConnectionState(MQTTAppConnectionState.connected);
     debugPrint('EXAMPLE::Mosquitto client connected....');
-    debugPrint("_receiveDataFromHandcuff = $receiveDataFromHandcuff");
+
     _client!.subscribe(_topic, MqttQos.atLeastOnce);
 
     _client!.updates!.listen((List<MqttReceivedMessage<MqttMessage?>>? c) {
@@ -103,8 +113,8 @@ class MQTTManager {
       // final MqttPublishMessage recMess = c![0].payload;
       final String pt =
           MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
-      // _currentState.setReceivedText(pt);
-      _currentState.setReceivedJsonString(pt);
+      _currentState.setReceivedText(pt);
+      // _currentState.setReceivedJsonString(pt);
     });
   }
 }
