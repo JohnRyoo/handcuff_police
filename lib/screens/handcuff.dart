@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:police/mqtt/MQTTManager.dart';
@@ -283,11 +284,15 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
                       GestureDetector(
                         onTap: () {
                           if (_formKey.currentState!.validate()) {
-                            // 임시 수갑 정보 추가
-                            _handcuffInfo.addHandcuff(serialNumber);
-                            // 등록된 수갑의 serial 번호로 subscription
-                            _mqttManager.subscribe(serialNumber);
-                            Get.back();
+                            if (!_handcuffInfo.isAlreadyRegistered(serialNumber)) {
+                              // 임시 수갑 정보 추가
+                              _handcuffInfo.addHandcuff(serialNumber);
+                              // 등록된 수갑의 serial 번호로 subscription
+                              _mqttManager.subscribe(serialNumber);
+                              Get.back();
+                            } else {
+                              _showToast('이미 등록된 수갑입니다!');
+                            }
                           } else {
                             // ScaffoldMessenger.of(context)
                             //     .showSnackBar(const SnackBar(
@@ -387,5 +392,16 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
             ],
           );
         });
+  }
+
+  void _showToast(String toastMessage) {
+    Fluttertoast.showToast(
+      msg: toastMessage,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Palette.lightButtonColor,
+      fontSize: 16,
+      textColor: Palette.darkTextColor,
+      toastLength: Toast.LENGTH_SHORT,
+    );
   }
 }
