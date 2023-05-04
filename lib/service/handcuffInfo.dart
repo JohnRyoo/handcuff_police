@@ -47,6 +47,10 @@ class HandcuffInfo extends GetxController {
     return _handcuffs.values.toList();
   }
 
+  bool isAlreadyRegistered(String serialNumber) {
+    return _handcuffs.keys.contains(serialNumber);
+  }
+
   Handcuff getHandcuff(String serialNumber) {
     return _handcuffs[serialNumber]!;
   }
