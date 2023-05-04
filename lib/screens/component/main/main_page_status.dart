@@ -161,16 +161,16 @@ class _MainPageStatusState extends State<MainPageStatus> {
                                   width: 20,
                                 ),
                                 SizedBox(
-                                  width: 120,
+                                  width: 60,
                                   child: Text(
-                                    _handcuffsMap[key]!.serialNumber,
+                                      (index+1).toString().padLeft(2, '0'),
                                     style: GoogleFonts.notoSans(
                                       textStyle: TextStyle(
                                         color: _handcuffsMap[key]!
                                                 .isHandcuffConnected
                                             ? Palette.darkTextColor
                                             : Palette.whiteTextColor,
-                                        fontSize: 20,
+                                        fontSize: 35,
                                         fontWeight: FontWeight.w800,
                                         height: 1.4,
                                       ),
@@ -178,10 +178,10 @@ class _MainPageStatusState extends State<MainPageStatus> {
                                   ),
                                 ),
                                 const SizedBox(
-                                  width: 20,
+                                  width: 30,
                                 ),
                                 SizedBox(
-                                  width: 30,
+                                  width: 40,
                                   child: Text(
                                     _handcuffsMap[key]!.isHandcuffConnected
                                         ? _handcuffsMap[key]!.batteryLevel ==
@@ -212,10 +212,10 @@ class _MainPageStatusState extends State<MainPageStatus> {
                                   ),
                                 ),
                                 const SizedBox(
-                                  width: 20,
+                                  width: 30,
                                 ),
                                 SizedBox(
-                                  width: 35,
+                                  width: 40,
                                   child: Text(
                                     _handcuffsMap[key]!.isHandcuffConnected
                                         ? _handcuffsMap[key]!.handcuffStatus ==
@@ -238,7 +238,7 @@ class _MainPageStatusState extends State<MainPageStatus> {
                                   ),
                                 ),
                                 const SizedBox(
-                                  width: 20,
+                                  width: 30,
                                 ),
                                 TextButton(
                                   onPressed: () {
@@ -253,9 +253,10 @@ class _MainPageStatusState extends State<MainPageStatus> {
                                       //           .serialNumber);
                                       // }
                                       Get.toNamed("/map", arguments: {
-                                        'serialNumber' :
+                                        'serialNumber':
                                             _handcuffsMap[key]!.serialNumber,
-                                        'mqttManager' : widget.mqttManager,
+                                        'mqttManager': widget.mqttManager,
+                                        'index': index+1,
                                       });
                                     }
                                   },

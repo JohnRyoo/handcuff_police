@@ -38,6 +38,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
 
   late String userId;
   late String serialNumber;
+  late String userIndex;
 
   double _currentZoomValue = 16.5;
 
@@ -171,6 +172,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
     userId = _guardInfo.id;
     serialNumber = Get.arguments['serialNumber'];
     _mqttManager = Get.arguments['mqttManager'];
+    userIndex = Get.arguments['index'].toString();
 
     super.initState();
 
@@ -279,15 +281,15 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                       position: LatLng(currentLocation!.latitude!,
                           currentLocation!.longitude!),
                     ),
-                    if (_handcuffInfo.getHandcuff(serialNumber).gpsStatus == GpsStatus.connected)
-                    Marker(
-                      markerId: const MarkerId("start"),
-                      icon: startIcon,
-                      position: _handcuffInfo
-                          .getHandcuff(serialNumber)
-                          .trackingPoints
-                          .first,
-                    )
+                    // if (_handcuffInfo.getHandcuff(serialNumber).gpsStatus == GpsStatus.connected)
+                    // Marker(
+                    //   markerId: const MarkerId("start"),
+                    //   icon: startIcon,
+                    //   position: _handcuffInfo
+                    //       .getHandcuff(serialNumber)
+                    //       .trackingPoints
+                    //       .first,
+                    // )
                   },
                   onTap: (cordinate) {
                     // _displayPositionOnTab(cordinate);
@@ -296,7 +298,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                 ),
 
           // ON, 상, 마지막 위치 표시
-          MapScreenStatus(serialNumber: serialNumber,),
+          MapScreenStatus(serialNumber: serialNumber, userIndex: userIndex),
 
           // 아래쪽 세개의 버튼
           Positioned(
@@ -404,9 +406,9 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(50),
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Text(
-                          "수갑위치",
+                          userIndex.padLeft(2, '0'),
                           style: TextStyle(color: Colors.white, fontSize: 15),
                         ),
                       ),

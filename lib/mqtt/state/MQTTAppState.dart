@@ -21,59 +21,64 @@ class MQTTAppState extends GetxController {
     _guardInfo = Get.find();
   }
 
+  String _command = '';
   String _receivedSerialNumber = '';
   double _receivedLatitude = 0.0;
   double _receivedLongitude = 0.0;
   String _receivedPowerStatus = '0';
 
   void setReceivedText(String receivedString) {
-    debugPrint('=======================================================');
-    debugPrint('receivedString with $receivedString');
+    debugPrint('[MQTTAppState] receivedString with $receivedString');
 
     List<String> handcuffData = receivedString.split(' ');
-    debugPrint('handcuffData = $handcuffData');
+    debugPrint('[MQTTAppState] handcuffData = $handcuffData');
 
-    switch (handcuffData[0]) {
-      case '1': // power on
-        _receivedSerialNumber = handcuffData[1];
-        _receivedPowerStatus = handcuffData[2];
+    _command = handcuffData[0];
+    _receivedSerialNumber = handcuffData[1];
 
-        if (_receivedPowerStatus == '1') {
+    if (_handcuffInfo.isAlreadyRegistered(_receivedSerialNumber)) {
+      switch (_command) {
+        case '1': // power on
+          _receivedPowerStatus = handcuffData[2];
+
+          if (_receivedPowerStatus == '1') {
+            _handcuffInfo.setPowerMode(_receivedSerialNumber, true);
+          } else {
+            _handcuffInfo.setPowerMode(_receivedSerialNumber, false);
+          }
+
+          break;
+        case '2': // MQTT data
+          _receivedSerialNumber = handcuffData[1];
+          _receivedLatitude = double.parse(handcuffData[2]);
+          _receivedLongitude = double.parse(handcuffData[3]);
+
           _handcuffInfo.setPowerMode(_receivedSerialNumber, true);
-        } else {
-          _handcuffInfo.setPowerMode(_receivedSerialNumber, false);
-        }
 
-        break;
-      case '2': // GPS data
-        _receivedSerialNumber = handcuffData[1];
-        _receivedLatitude = double.parse(handcuffData[2]);
-        _receivedLongitude = double.parse(handcuffData[3]);
+          if (_receivedLatitude.abs() == 0.abs()) {
+            _handcuffInfo.setGpsStatus(
+                _receivedSerialNumber, GpsStatus.connecting);
+            debugPrint("gpsStatus = GpsStatus.connecting");
+          } else {
+            _handcuffInfo
+                .getHandcuff(_receivedSerialNumber)
+                .addTrackingPoints(LatLng(_receivedLatitude, _receivedLongitude));
+            _handcuffInfo.setGpsStatus(
+                _receivedSerialNumber, GpsStatus.connected);
+            debugPrint("[MQTTAppState] gpsStatus = GpsStatus.connected");
+          }
 
-        // _handcuffInfo.setBatteryLevel('aaaaaaa', BatteryLevel.low);
-        // _handcuffInfo.setHandcuffStatus('aaaaaaa', HandcuffStatus.runAway);
+          debugPrint(
+              "[MQTTAppState] _handcuffInfo.getHandcuff($_receivedSerialNumber).trackingPoints = "
+                  "${_handcuffInfo.getHandcuff(_receivedSerialNumber).trackingPoints}");
 
-        if (_receivedLatitude.abs() == 0.abs()) {
-          _handcuffInfo.setGpsStatus(
-              _receivedSerialNumber, GpsStatus.connecting);
-          debugPrint("gpsStatus = GpsStatus.connecting");
-        } else {
-          _handcuffInfo
-              .getHandcuff(_receivedSerialNumber)
-              .addTrackingPoints(LatLng(_receivedLatitude, _receivedLongitude));
-          _handcuffInfo.setGpsStatus(
-              _receivedSerialNumber, GpsStatus.connected);
-          debugPrint("gpsStatus = GpsStatus.connected");
-        }
-
-        debugPrint(
-            "_handcuffInfo.getHandcuff($_receivedSerialNumber).trackingPoints = "
-            "${_handcuffInfo.getHandcuff(_receivedSerialNumber).trackingPoints}");
-
-        // notifyListeners();
-        update();
-        break;
-      default:
+          // notifyListeners();
+          update();
+          break;
+        default:
+      }
+    } else {
+      debugPrint('[MQTTAppState] No processing for received MQTT data.');
     }
   }
 

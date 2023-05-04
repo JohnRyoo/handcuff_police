@@ -8,10 +8,12 @@ import '../../../service/guardInfo.dart';
 import '../../../service/handcuffInfo.dart';
 
 class MapScreenStatus extends StatelessWidget {
-  MapScreenStatus({Key? key, required this.serialNumber})
+  MapScreenStatus(
+      {Key? key, required this.serialNumber, required this.userIndex})
       : super(key: key);
 
   final String serialNumber;
+  final String userIndex;
 
   final HandcuffInfo _handcuffInfo = Get.find();
   final MQTTAppState _mqttAppState = Get.find();
@@ -47,8 +49,21 @@ class MapScreenStatus extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
+            // Text(
+            //   isHandcuffConnected ? 'ON' : 'OFF',
+            //   style: GoogleFonts.notoSans(
+            //     textStyle: TextStyle(
+            //       color: isHandcuffConnected
+            //           ? Palette.darkTextColor
+            //           : Palette.whiteTextColor,
+            //       fontSize: 36,
+            //       fontWeight: FontWeight.w800,
+            //       height: 1.4,
+            //     ),
+            //   ),
+            // ),
             Text(
-              isHandcuffConnected ? 'ON' : 'OFF',
+              userIndex.toString().padLeft(2, '0'),
               style: GoogleFonts.notoSans(
                 textStyle: TextStyle(
                   color: isHandcuffConnected
@@ -81,24 +96,39 @@ class MapScreenStatus extends StatelessWidget {
                 ),
               ),
             ),
-            TextButton(
-              onPressed: () {},
-              child: Text(
-                !isHandcuffConnected ||
-                        gpsStatus == GpsStatus.disconnected
-                    ? '마지막 위치'
-                    : gpsStatus == GpsStatus.connected
-                        ? '위치확인'
-                        : '위치확인중...',
-                style: GoogleFonts.notoSans(
-                  textStyle: TextStyle(
-                    color: isHandcuffConnected
-                        ? Palette.darkTextColor
-                        : Palette.whiteTextColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    height: 1.4,
-                  ),
+            Text(
+              isHandcuffConnected
+                  ? handcuffStatus ==
+                  HandcuffStatus.runAway
+                  ? '도주'
+                  : '정상'
+                  : '-',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.notoSans(
+                textStyle: TextStyle(
+                  color: isHandcuffConnected
+                      ? Palette.darkTextColor
+                      : Palette.whiteTextColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  height: 1.4,
+                ),
+              ),
+            ),
+            Text(
+              !isHandcuffConnected || gpsStatus == GpsStatus.disconnected
+                  ? '마지막 위치'
+                  : gpsStatus == GpsStatus.connected
+                      ? '위치확인'
+                      : '위치확인중...',
+              style: GoogleFonts.notoSans(
+                textStyle: TextStyle(
+                  color: isHandcuffConnected
+                      ? Palette.darkTextColor
+                      : Palette.whiteTextColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  height: 1.4,
                 ),
               ),
             ),
