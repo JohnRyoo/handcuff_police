@@ -323,14 +323,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                         borderRadius: BorderRadius.circular(50),
                       ),
                       child: const Center(
-                        child: Text(
-                          "내위치",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ),
+
+                       ),
                     ),
                   ),
                   GestureDetector(

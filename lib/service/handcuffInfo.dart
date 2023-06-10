@@ -17,6 +17,7 @@ const String brokerAddress = "13.124.88.113";
 class HandcuffInfo extends GetxController {
   final RxMap<String, Handcuff> _handcuffs = <String, Handcuff>{}.obs;
   RxInt numberOfHandcuffs = 0.obs;
+  RxInt numberOfConnectedHandcuffs = 0.obs;
 
   void makeHandcuffsFromPref() async {
     var key = "SerialNumberList";
@@ -28,7 +29,6 @@ class HandcuffInfo extends GetxController {
       _handcuffs[serialNumber] = handcuff;
       numberOfHandcuffs++;
     }
-
   }
 
   HandcuffInfo() {
@@ -37,6 +37,22 @@ class HandcuffInfo extends GetxController {
 
   int getNumberOfHandcuffs() {
     return _handcuffs.length;
+  }
+
+  RxInt getNumberOfConnectedHandcuffs() {
+    numberOfConnectedHandcuffs.value = 0;
+    getHandcuffsList().forEach((handcuff) {
+      debugPrint(
+          '[handcuffInfo] serialnumber = ${handcuff.serialNumber} handcuff.gpsStatus = ${handcuff.gpsStatus.toString()} ');
+      if (handcuff.gpsStatus == GpsStatus.connected) {
+        numberOfConnectedHandcuffs++;
+      }
+    });
+
+    debugPrint(
+        '[handcuffInfo] numberOfConnectedHandcuffs = $numberOfConnectedHandcuffs');
+
+    return numberOfConnectedHandcuffs;
   }
 
   RxMap<String, Handcuff> getHandcuffsMap() {

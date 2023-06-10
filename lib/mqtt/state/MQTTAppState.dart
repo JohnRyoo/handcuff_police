@@ -25,6 +25,8 @@ class MQTTAppState extends GetxController {
   String _receivedSerialNumber = '';
   double _receivedLatitude = 0.0;
   double _receivedLongitude = 0.0;
+  String _batteryLevel = '';
+  String _handcuffStatus = '';
   String _receivedPowerStatus = '0';
 
   void setReceivedText(String receivedString) {
@@ -39,6 +41,8 @@ class MQTTAppState extends GetxController {
     if (_handcuffInfo.isAlreadyRegistered(_receivedSerialNumber)) {
       switch (_command) {
         case '1': // power on
+          if (handcuffData.length != 3) break;
+
           _receivedPowerStatus = handcuffData[2];
 
           if (_receivedPowerStatus == '1') {
@@ -49,6 +53,8 @@ class MQTTAppState extends GetxController {
 
           break;
         case '2': // MQTT data
+          if (handcuffData.length != 6) break;
+
           _receivedSerialNumber = handcuffData[1];
           _receivedLatitude = double.parse(handcuffData[2]);
           _receivedLongitude = double.parse(handcuffData[3]);
@@ -60,17 +66,52 @@ class MQTTAppState extends GetxController {
                 _receivedSerialNumber, GpsStatus.connecting);
             debugPrint("gpsStatus = GpsStatus.connecting");
           } else {
-            _handcuffInfo
-                .getHandcuff(_receivedSerialNumber)
-                .addTrackingPoints(LatLng(_receivedLatitude, _receivedLongitude));
+            _handcuffInfo.getHandcuff(_receivedSerialNumber).addTrackingPoints(
+                LatLng(_receivedLatitude, _receivedLongitude));
             _handcuffInfo.setGpsStatus(
                 _receivedSerialNumber, GpsStatus.connected);
             debugPrint("[MQTTAppState] gpsStatus = GpsStatus.connected");
           }
-
           debugPrint(
               "[MQTTAppState] _handcuffInfo.getHandcuff($_receivedSerialNumber).trackingPoints = "
-                  "${_handcuffInfo.getHandcuff(_receivedSerialNumber).trackingPoints}");
+              "${_handcuffInfo.getHandcuff(_receivedSerialNumber).trackingPoints}");
+
+          _batteryLevel = handcuffData[4];
+
+          switch (_batteryLevel) {
+            case '1':
+              _handcuffInfo.setBatteryLevel(
+                  _receivedSerialNumber, BatteryLevel.low);
+              break;
+            case '2':
+              _handcuffInfo.setBatteryLevel(
+                  _receivedSerialNumber, BatteryLevel.middle);
+              break;
+            case '3':
+              _handcuffInfo.setBatteryLevel(
+                  _receivedSerialNumber, BatteryLevel.high);
+              break;
+            default:
+              _handcuffInfo.setBatteryLevel(
+                  _receivedSerialNumber, BatteryLevel.unknown);
+          }
+
+          _handcuffStatus = handcuffData[5];
+          switch (_handcuffStatus) {
+            case '0':
+              _handcuffInfo.setHandcuffStatus(
+                  _receivedSerialNumber, HandcuffStatus.normal);
+              break;
+            case '1':
+              _handcuffInfo.setHandcuffStatus(
+                  _receivedSerialNumber, HandcuffStatus.runAway);
+              break;
+            default:
+              _handcuffInfo.setHandcuffStatus(
+                  _receivedSerialNumber, HandcuffStatus.normal);
+          }
+
+          _handcuffInfo.getNumberOfConnectedHandcuffs();
 
           // notifyListeners();
           update();

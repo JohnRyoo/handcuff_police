@@ -116,7 +116,7 @@ class _MainPageScreenState extends State<MainPageScreen> {
                   () => Text.rich(
                     TextSpan(
                       text: _handcuffInfo
-                          .getNumberOfHandcuffs()
+                          .getNumberOfConnectedHandcuffs()
                           .toString()
                           .padLeft(2, '0'),
                       style: const TextStyle(
@@ -126,7 +126,11 @@ class _MainPageScreenState extends State<MainPageScreen> {
                       children: <TextSpan>[
                         TextSpan(
                           // TODO : 전체 갯수에 대해 확인 후 수정할 것
-                          text: '/${maxHandcuffs.toString().padLeft(2, '0')}',
+                          // text: '/${maxHandcuffs.toString().padLeft(2, '0')}',
+                          text: '/${_handcuffInfo
+                              .getNumberOfHandcuffs()
+                              .toString()
+                              .padLeft(2, '0')}',
                           style: const TextStyle(
                             fontSize: 30,
                             color: Palette.whiteTextColor,
