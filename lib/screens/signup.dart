@@ -21,6 +21,8 @@ class _SignupScreenState extends State<SignupScreen> {
   String userId = '';
   String userPassword = '';
   String userPasswordConfirm = '';
+  String userName = '';
+  String userDepartment = '';
   TextEditingController userPasswordController = TextEditingController();
   TextEditingController userPasswordConfirmController = TextEditingController();
 
@@ -112,7 +114,8 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: Column(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 20.0),
                             child: Form(
                               key: _formKey,
                               child: Column(
@@ -302,6 +305,121 @@ class _SignupScreenState extends State<SignupScreen> {
                                   const SizedBox(
                                     height: 10,
                                   ),
+
+                                  // 이름
+                                  TextFormField(
+                                    key: const ValueKey(4),
+                                    keyboardType: TextInputType.text,
+                                    validator: (value) {
+                                      if (value!.isEmpty) {
+                                        return '이름을 입력하세요.';
+                                      }
+                                      return null;
+                                    },
+                                    onSaved: (value) {
+                                      userName = value!;
+                                    },
+                                    onChanged: (value) {
+                                      userName = value;
+                                    },
+                                    style: const TextStyle(
+                                        color: Palette.whiteTextColor),
+                                    decoration: const InputDecoration(
+                                      filled: true,
+                                      fillColor: Palette.darkButtonColor,
+                                      prefixIcon: Icon(
+                                        Icons.person,
+                                        color: Palette.whiteTextColor,
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(35.0),
+                                        ),
+                                      ),
+                                      errorBorder: OutlineInputBorder(
+                                        // borderSide: BorderSide(
+                                        //   color: Colors.red,
+                                        // ),
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(35.0),
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(35.0),
+                                        ),
+                                      ),
+                                      focusedErrorBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(35.0),
+                                        ),
+                                      ),
+                                      hintText: '이름',
+                                      hintStyle: TextStyle(
+                                        fontSize: 14,
+                                        color: Palette.whiteTextColor,
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+
+                                  // 근무처, 부서
+                                  TextFormField(
+                                    key: const ValueKey(5),
+                                    validator: (value) {
+                                      if (value!.isEmpty) {
+                                        return '근무처 또는 부서를 입력하세요.';
+                                      }
+                                      return null;
+                                    },
+                                    onSaved: (value) {
+                                      userDepartment = value!;
+                                    },
+                                    onChanged: (value) {
+                                      userDepartment = value;
+                                    },
+                                    style: const TextStyle(
+                                        color: Palette.whiteTextColor),
+                                    decoration: const InputDecoration(
+                                      filled: true,
+                                      fillColor: Palette.darkButtonColor,
+                                      prefixIcon: Icon(
+                                        Icons.work,
+                                        color: Palette.whiteTextColor,
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(35.0),
+                                        ),
+                                      ),
+                                      errorBorder: OutlineInputBorder(
+                                        // borderSide: BorderSide(
+                                        //   color: Colors.red,
+                                        // ),
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(35.0),
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(35.0),
+                                        ),
+                                      ),
+                                      focusedErrorBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(35.0),
+                                        ),
+                                      ),
+                                      hintText: '근무처,부서',
+                                      hintStyle: TextStyle(
+                                        fontSize: 14,
+                                        color: Palette.whiteTextColor,
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -311,7 +429,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
 
                     const SizedBox(
-                      height: 70,
+                      height: 30,
                     ),
 
                     // 등록하기 버튼
