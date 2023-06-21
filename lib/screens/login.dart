@@ -316,7 +316,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Center(
                             child: Center(
                               child: Text(
-                                '관리자등록',
+                                '회원가입',
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.notoSans(
                                     textStyle: const TextStyle(
