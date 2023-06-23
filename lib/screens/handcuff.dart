@@ -46,6 +46,9 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
 
   @override
   Widget build(BuildContext context) {
+    double height = MediaQuery.of(context).size.height;
+    double width = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -95,7 +98,7 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
 
             // copyright
             Positioned(
-              top: MediaQuery.of(context).size.height - 120,
+              top: height - 120,
               left: 0,
               right: 0,
               child: Center(
@@ -132,7 +135,7 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
                       // 수갑 이미지
                       Container(
                         height: 130,
-                        width: MediaQuery.of(context).size.width - 40,
+                        width: width - 40,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(25),
                           color: Palette.darkButtonColor,
@@ -308,7 +311,7 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
                           }
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width - 40,
+                          width: width - 40,
                           height: 60,
                           decoration: BoxDecoration(
                             color: Palette.lightButtonColor,

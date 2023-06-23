@@ -23,11 +23,14 @@ class _MainPageScreenState extends State<MainPageScreen> {
   final MQTTAppState mqttAppState = Get.find();
   final GuardInfo guardInfo = Get.find();
 
-  int maxHandcuffs = 3;
+  int maxHandcuffs = 1;
   late MQTTManager manager;
   late RxMap<String, Handcuff> _handcuffsMap;
 
   late String userId;
+
+  String userName = '김정식';
+  String department = '안양경찰서 강력반';
 
   void mqttConnect(String topic) {
     var randomId = Random().nextInt(1000) + 1;
@@ -51,6 +54,7 @@ class _MainPageScreenState extends State<MainPageScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     debugPrint("Execute main_page build!!!!!!");
 
     _handcuffsMap = _handcuffInfo.getHandcuffsMap();
@@ -72,7 +76,7 @@ class _MainPageScreenState extends State<MainPageScreen> {
         });
       }
 
-      return 50;
+      return 5.0;
     }
 
     return Scaffold(
@@ -100,51 +104,86 @@ class _MainPageScreenState extends State<MainPageScreen> {
           color: Palette.backgroundColor,
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             const SizedBox(
               height: 30,
             ),
-            Container(
-              height: 130,
-              width: MediaQuery.of(context).size.width - 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                color: Palette.darkButtonColor,
-              ),
-              child: Center(
-                child: Obx(
-                  () => Text.rich(
-                    TextSpan(
-                      text: _handcuffInfo
-                          .getNumberOfConnectedHandcuffs()
-                          .toString()
-                          .padLeft(2, '0'),
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 60,
-                          color: Palette.whiteTextColor),
-                      children: <TextSpan>[
-                        TextSpan(
-                          // TODO : 전체 갯수에 대해 확인 후 수정할 것
-                          // text: '/${maxHandcuffs.toString().padLeft(2, '0')}',
-                          text: '/${_handcuffInfo
-                              .getNumberOfHandcuffs()
-                              .toString()
-                              .padLeft(2, '0')}',
-                          style: const TextStyle(
-                            fontSize: 30,
-                            color: Palette.whiteTextColor,
-                          ),
-                        ),
-                      ],
+            // 이름
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const SizedBox(
+                  width: 50,
+                ),
+                Text(
+                  '이름',
+                  style: GoogleFonts.notoSans(
+                    textStyle: const TextStyle(
+                      color: Palette.whiteTextColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      height: 1.4,
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(
+                  width: 170,
+                ),
+                Text(
+                  userName,
+                  style: GoogleFonts.notoSans(
+                    textStyle: const TextStyle(
+                      color: Palette.whiteTextColor,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w800,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(
               height: 30,
+            ),
+            // 부서
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const SizedBox(
+                  width: 50,
+                ),
+                Text(
+                  '부서',
+                  style: GoogleFonts.notoSans(
+                    textStyle: const TextStyle(
+                      color: Palette.whiteTextColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  width: 145,
+                ),
+                Text(
+                  department,
+                  style: GoogleFonts.notoSans(
+                    textStyle: const TextStyle(
+                      color: Palette.whiteTextColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(
+              height: 70,
             ),
 
             MainPageStatus(mqttManager: manager),
@@ -154,7 +193,8 @@ class _MainPageScreenState extends State<MainPageScreen> {
             ),
 
             Obx(
-              () => Container(
+              () => SizedBox(
+                height: 60,
                 child: Column(
                   children: [
                     // 수갑 등록 최대 갯수 이하인 경우 등록 버튼을 보여줌
@@ -187,21 +227,27 @@ class _MainPageScreenState extends State<MainPageScreen> {
                     // 등록된 수갑의 갯수가 최대치를 넘어가면 등록버튼을 disable
                     if (_handcuffInfo.getNumberOfHandcuffs() >= maxHandcuffs)
                       SizedBox(
-                        child: Container(
-                          padding: const EdgeInsets.all(0),
-                          height: 60,
-                          width: 60,
-                          decoration: BoxDecoration(
-                            color: Palette.darkButtonColor,
-                            borderRadius: BorderRadius.circular(50),
-                          ),
+                        child: GestureDetector(
+                          onTap: () {
+                            _deleteHandcuff();
+
+                          },
                           child: Container(
+                            padding: const EdgeInsets.all(0),
+                            height: 60,
+                            width: 60,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(30),
+                              color: Palette.darkButtonColor,
+                              borderRadius: BorderRadius.circular(50),
                             ),
-                            child: const Icon(
-                              Icons.clear,
-                              color: Palette.darkTextColor,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: const Icon(
+                                Icons.clear,
+                                color: Palette.darkTextColor,
+                              ),
                             ),
                           ),
                         ),
@@ -213,7 +259,7 @@ class _MainPageScreenState extends State<MainPageScreen> {
 
             // Guard의 connection이 되면 바로 등록된 수갑의 subscribe을 진행
             Obx(() => SizedBox(
-                  height: guardInfo.isConnected.isTrue ? boxSize() : boxSize(),
+                  width: guardInfo.isConnected.isTrue ? boxSize() : boxSize(),
                 )),
           ],
         ),
@@ -259,6 +305,61 @@ class _MainPageScreenState extends State<MainPageScreen> {
                 },
                 child: Text(
                   '아니요',
+                  style: GoogleFonts.notoSans(
+                    textStyle: const TextStyle(
+                      color: Palette.darkTextColor,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        });
+  }
+
+  Future _deleteHandcuff() async {
+    return await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Palette.lightButtonColor,
+            title: Text(
+              '삭제하시겠습까?',
+              style: GoogleFonts.notoSans(
+                textStyle: const TextStyle(
+                  color: Palette.darkTextColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Get.back();
+                  setState(() {
+                    _handcuffInfo.removeHandcuff(_handcuffsMap.keys.elementAt(0));
+                    debugPrint('_handcuffsMap = $_handcuffsMap');
+                  });
+                },
+                child: Text(
+                  '삭제',
+                  style: GoogleFonts.notoSans(
+                    textStyle: const TextStyle(
+                      color: Palette.darkTextColor,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  //Navigator.pop(context);
+                  Get.back();
+                },
+                child: Text(
+                  '취소',
                   style: GoogleFonts.notoSans(
                     textStyle: const TextStyle(
                       color: Palette.darkTextColor,

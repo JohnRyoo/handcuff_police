@@ -71,6 +71,10 @@ class HandcuffInfo extends GetxController {
     return _handcuffs[serialNumber]!;
   }
 
+  Handcuff getFirstHandcuff() {
+    return getHandcuffsList().first;
+  }
+
   void addHandcuff(String serialNumber) {
     Handcuff handcuff = Handcuff(serialNumber: serialNumber);
     _handcuffs[serialNumber] = handcuff;
