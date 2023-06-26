@@ -63,7 +63,8 @@ class MapScreenStatus extends StatelessWidget {
             //   ),
             // ),
             Text(
-              userIndex.toString().padLeft(2, '0'),
+              // userIndex.toString().padLeft(2, '0'),
+                isHandcuffConnected ? 'ON' : 'OFF',
               style: GoogleFonts.notoSans(
                 textStyle: TextStyle(
                   color: isHandcuffConnected

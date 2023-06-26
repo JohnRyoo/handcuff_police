@@ -28,6 +28,7 @@ class HandcuffOnMap extends StatefulWidget {
 
 class _HandcuffOnMapState extends State<HandcuffOnMap> {
   final HandcuffInfo _handcuffInfo = Get.find();
+
   // final MQTTAppState _mqttAppState = Get.find();
   final GuardInfo _guardInfo = Get.find();
 
@@ -236,26 +237,27 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                           currentLocation!.longitude!),
                       zoom: 16.5),
                   polylines: {
-                    if (_handcuffInfo.getHandcuff(serialNumber).gpsStatus == GpsStatus.connected)
-                    // Polyline(
-                    //   polylineId: const PolylineId("policeTracking"),
-                    //   points: _guardInfo.trackingPoints,
-                    //   color: Colors.brown.shade300,
-                    //   width: 5,
-                    // ),
-                    Polyline(
-                      polylineId: const PolylineId("handcuffTracking"),
-                      points: _handcuffInfo
-                          .getHandcuff(serialNumber)
-                          .trackingPoints,
-                      color: (_handcuffInfo
-                                  .getHandcuff(serialNumber)
-                                  .handcuffStatus ==
-                              HandcuffStatus.runAway)
-                          ? Colors.redAccent
-                          : Colors.lightBlue,
-                      width: 7,
-                    )
+                    if (_handcuffInfo.getHandcuff(serialNumber).gpsStatus ==
+                        GpsStatus.connected)
+                      // Polyline(
+                      //   polylineId: const PolylineId("policeTracking"),
+                      //   points: _guardInfo.trackingPoints,
+                      //   color: Colors.brown.shade300,
+                      //   width: 5,
+                      // ),
+                      Polyline(
+                        polylineId: const PolylineId("handcuffTracking"),
+                        points: _handcuffInfo
+                            .getHandcuff(serialNumber)
+                            .trackingPoints,
+                        color: (_handcuffInfo
+                                    .getHandcuff(serialNumber)
+                                    .handcuffStatus ==
+                                HandcuffStatus.runAway)
+                            ? Colors.redAccent
+                            : Colors.lightBlue,
+                        width: 7,
+                      )
                   },
                   zoomControlsEnabled: true,
                   mapType: MapType.normal,
@@ -270,11 +272,11 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                   },
                   markers: {
                     Marker(
-                      markerId: const MarkerId("handcuffLocation"),
-                      icon: handcuffIcon,
-                      position: _handcuffInfo
-                          .getHandcuff(serialNumber).lastLocation
-                    ),
+                        markerId: const MarkerId("handcuffLocation"),
+                        icon: handcuffIcon,
+                        position: _handcuffInfo
+                            .getHandcuff(serialNumber)
+                            .lastLocation),
                     Marker(
                       markerId: const MarkerId("policeLocation"),
                       icon: policeIcon,
@@ -323,8 +325,14 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                         borderRadius: BorderRadius.circular(50),
                       ),
                       child: const Center(
-
-                       ),
+                        child: Text(
+                          "내위치",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   GestureDetector(
@@ -332,11 +340,13 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                       if (!isAlarmOn) {
                         isAlarmOn = true;
                         _countDownController.start();
-                        _mqttManager.publishToHandcuff(serialNumber, '6 $serialNumber 1');
+                        _mqttManager.publishToHandcuff(
+                            serialNumber, '6 $serialNumber 1');
                       } else {
                         isAlarmOn = false;
                         _countDownController.reset();
-                        _mqttManager.publishToHandcuff(serialNumber, '6 $serialNumber 0');
+                        _mqttManager.publishToHandcuff(
+                            serialNumber, '6 $serialNumber 0');
                       }
 
                       debugPrint("Alarm ON at Handcuff!!");
@@ -369,7 +379,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                       },
                       onComplete: () {
                         debugPrint('Countdown End!!!!');
-                        _mqttManager.publishToHandcuff(serialNumber, '6 $serialNumber 0');
+                        _mqttManager.publishToHandcuff(
+                            serialNumber, '6 $serialNumber 0');
                       },
                       onChange: (String timeStamp) {
                         debugPrint('Countdown Changed $timeStamp');
@@ -402,7 +413,12 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                       ),
                       child: Center(
                         child: Text(
-                          userIndex.padLeft(2, '0'),
+                          // userIndex.padLeft(2, '0'),
+                          _handcuffInfo
+                                  .getHandcuff(serialNumber)
+                                  .isHandcuffConnected
+                              ? 'ON'
+                              : 'OFF',
                           style: TextStyle(color: Colors.white, fontSize: 15),
                         ),
                       ),
