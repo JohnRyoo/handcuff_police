@@ -55,6 +55,8 @@ class MQTTAppState extends GetxController {
         case '2': // MQTT data
           if (handcuffData.length != 6) break;
 
+          _handcuffInfo.checkConnection(); // 수갑과 연동 중임을 확인
+          
           _receivedSerialNumber = handcuffData[1];
           _receivedLatitude = double.parse(handcuffData[2]);
           _receivedLongitude = double.parse(handcuffData[3]);

@@ -19,6 +19,30 @@ class HandcuffInfo extends GetxController {
   RxInt numberOfHandcuffs = 0.obs;
   RxInt numberOfConnectedHandcuffs = 0.obs;
 
+  RxInt connectionMonitor = 0.obs;
+
+  @override
+  void onInit() {
+    // ever(connectionMonitor, (_) {
+    //   debugPrint('[HandcuffInfo] $_이 변경되었습니다. ');
+    // });
+
+    debounce(
+      connectionMonitor,
+      (_) {
+        debugPrint('[HandcuffInfo] $_가 마지막으로 변경된 이후로 60초가 지남');
+        getFirstHandcuff().isHandcuffConnected = false;
+        update();
+      },
+      time: const Duration(seconds: 60),
+    );
+  }
+
+  void checkConnection() {
+    connectionMonitor.value++;
+    debugPrint('[HandcuffInfo] connectionMonitor = $connectionMonitor.value');
+  }
+
   void makeHandcuffsFromPref() async {
     var key = "SerialNumberList";
     SharedPreferences pref = await SharedPreferences.getInstance();

@@ -201,7 +201,8 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
         backgroundColor: Colors.black,
         leading: IconButton(
           onPressed: () {
-            Navigator.pop(context);
+            // Navigator.pop(context);
+            Get.back();
           },
           icon: const Icon(Icons.arrow_back_ios),
           color: Palette.whiteTextColor,

@@ -37,15 +37,14 @@ class _MainPageStatusState extends State<MainPageStatus> {
 
     debugPrint("[main_page_status] This is called when BACK is executed!!");
 
-    return Obx(() => SizedBox(
-          child: Column(
-            children: [
-              if (_handcuffInfo.getHandcuffsMap().isEmpty) const NoHandcuff(),
-              if (_handcuffInfo.getHandcuffsMap().isNotEmpty)
-                OneHandcuff(mqttManager: widget.mqttManager)
-            ],
-          ),
-        ));
+    return Obx(() => Column(
+      children: [
+        if (_handcuffInfo.getHandcuffsMap().isEmpty)
+          const NoHandcuff(),
+        if (_handcuffInfo.getHandcuffsMap().isNotEmpty)
+          OneHandcuff(mqttManager: widget.mqttManager)
+      ],
+    ));
   }
 }
 
@@ -88,133 +87,123 @@ class OneHandcuff extends StatelessWidget {
 
   final HandcuffInfo _handcuffInfo = Get.find();
 
-  late RxMap<String, Handcuff> _handcuffsMap;
-
-  late String oneKey;
+  late bool isHandcuffConnected;
+  late HandcuffStatus handcuffStatus;
+  late BatteryLevel batteryLevel;
+  late GpsStatus gpsStatus;
 
   @override
   Widget build(BuildContext context) {
-    _handcuffsMap = _handcuffInfo.getHandcuffsMap();
-
-    oneKey = _handcuffsMap.keys.elementAt(0);
+    // Handcuff handcuff = _handcuffInfo.getHandcuffsMap().values.toList().first;
+    Handcuff handcuff = _handcuffInfo.getFirstHandcuff();
 
     return GetBuilder<HandcuffInfo>(
         init: HandcuffInfo(),
         builder: (_) => Container(
-              width: MediaQuery.of(context).size.width - 30,
-              height: 400,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                color: !_handcuffsMap[oneKey]!.isHandcuffConnected
-                    ? Palette.darkButtonColor
-                    : _handcuffsMap[oneKey]!.isHandcuffConnected &&
-                            (_handcuffsMap[oneKey]!.handcuffStatus ==
-                                HandcuffStatus.runAway)
-                        ? Palette.emergencyColor
-                        : Palette.lightButtonColor,
-              ),
-              child: Column(
+          width: MediaQuery.of(context).size.width - 30,
+          height: 400,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(25),
+            color: !handcuff.isHandcuffConnected
+                ? Palette.darkButtonColor
+                : handcuff.isHandcuffConnected &&
+                        (handcuff.handcuffStatus == HandcuffStatus.runAway)
+                    ? Palette.emergencyColor
+                    : Palette.lightButtonColor,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Text(
-                        _handcuffsMap[oneKey]!.isHandcuffConnected
-                            ? 'ON'
-                            : 'OFF',
-                        style: GoogleFonts.notoSans(
-                          textStyle: TextStyle(
-                            color: !_handcuffsMap[oneKey]!.isHandcuffConnected
-                                ? Palette.whiteTextColor
-                                : Palette.darkTextColor,
-                            fontSize: 36,
-                            fontWeight: FontWeight.w800,
-                            height: 1.4,
-                          ),
-                        ),
+                  Text(
+                    handcuff.isHandcuffConnected ? 'ON' : 'OFF',
+                    style: GoogleFonts.notoSans(
+                      textStyle: TextStyle(
+                        color: !handcuff.isHandcuffConnected
+                            ? Palette.whiteTextColor
+                            : Palette.darkTextColor,
+                        fontSize: 36,
+                        fontWeight: FontWeight.w800,
+                        height: 1.4,
                       ),
-                      Text(
-                        _handcuffsMap[oneKey]!.isHandcuffConnected
-                            ? _handcuffsMap[oneKey]!.batteryLevel ==
-                                    BatteryLevel.high
-                                ? '상'
-                                : _handcuffsMap[oneKey]!.batteryLevel ==
-                                        BatteryLevel.middle
-                                    ? '중'
-                                    : _handcuffsMap[oneKey]!.batteryLevel ==
-                                            BatteryLevel.low
-                                        ? '하'
-                                        : '-'
-                            : '-',
-                        style: GoogleFonts.notoSans(
-                          textStyle: TextStyle(
-                            color: _handcuffsMap[oneKey]!.isHandcuffConnected
-                                ? Palette.darkTextColor
-                                : Palette.whiteTextColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          debugPrint(
-                              'isLastLocation = ${_handcuffsMap[oneKey]!.isLastLocation}');
-                          if (_handcuffsMap[oneKey]!.isLastLocation) {
-                            Get.toNamed("/map", arguments: {
-                              'serialNumber':
-                                  _handcuffsMap[oneKey]!.serialNumber,
-                              'mqttManager': mqttManager,
-                              'index': 1, // 경찰용 지도에는 index가 무의미함
-                            });
-                          }
-                        },
-                        child: Text(
-                          !_handcuffsMap[oneKey]!.isHandcuffConnected ||
-                                  _handcuffsMap[oneKey]!.gpsStatus ==
-                                      GpsStatus.disconnected
-                              ? '마지막 위치'
-                              : _handcuffsMap[oneKey]!.gpsStatus ==
-                                      GpsStatus.connected
-                                  ? '위치 확인'
-                                  : '위치확인중..',
-                          style: GoogleFonts.notoSans(
-                            textStyle: TextStyle(
-                              color: _handcuffsMap[oneKey]!.isHandcuffConnected
-                                  ? Palette.darkTextColor
-                                  : Palette.whiteTextColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    height: 330,
-                    width: MediaQuery.of(context).size.width - 50,
-                    margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(25),
-                      color: Colors.black,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          'images/handcuff.png',
-                          width: 270,
-                          fit: BoxFit.fill,
+                  ),
+                  Text(
+                    handcuff.isHandcuffConnected
+                        ? handcuff.batteryLevel == BatteryLevel.high
+                            ? '상'
+                            : handcuff.batteryLevel == BatteryLevel.middle
+                                ? '중'
+                                : handcuff.batteryLevel == BatteryLevel.low
+                                    ? '하'
+                                    : '-'
+                        : '-',
+                    style: GoogleFonts.notoSans(
+                      textStyle: TextStyle(
+                        color: handcuff.isHandcuffConnected
+                            ? Palette.darkTextColor
+                            : Palette.whiteTextColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      debugPrint('isLastLocation = ${handcuff.isLastLocation}');
+                      if (handcuff.isLastLocation) {
+                        Get.toNamed("/map", arguments: {
+                          'serialNumber': handcuff.serialNumber,
+                          'mqttManager': mqttManager,
+                          'index': 1, // 경찰용 지도에는 index가 무의미함
+                        });
+                      }
+                    },
+                    child: Text(
+                      !handcuff.isHandcuffConnected ||
+                              handcuff.gpsStatus == GpsStatus.disconnected
+                          ? '마지막 위치'
+                          : handcuff.gpsStatus == GpsStatus.connected
+                              ? '위치 확인'
+                              : '위치확인중..',
+                      style: GoogleFonts.notoSans(
+                        textStyle: TextStyle(
+                          color: handcuff.isHandcuffConnected
+                              ? Palette.darkTextColor
+                              : Palette.whiteTextColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          height: 1.4,
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ],
               ),
-            ));
+              Container(
+                height: 330,
+                width: MediaQuery.of(context).size.width - 50,
+                margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: Colors.black,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'images/handcuff.png',
+                      width: 270,
+                      fit: BoxFit.fill,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ));
   }
 }

@@ -55,7 +55,7 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
         backgroundColor: Palette.backgroundColor,
         leading: IconButton(
           onPressed: () {
-            Navigator.pop(context);
+            Get.back();
           },
           icon: const Icon(Icons.arrow_back_ios),
           color: Palette.whiteTextColor,
