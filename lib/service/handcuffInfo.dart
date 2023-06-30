@@ -19,6 +19,80 @@ class HandcuffInfo extends GetxController {
   RxInt numberOfHandcuffs = 0.obs;
   RxInt numberOfConnectedHandcuffs = 0.obs;
 
+  final RxInt connectionMonitor00 = 0.obs;
+  final RxInt connectionMonitor01 = 0.obs;
+  final RxInt connectionMonitor02 = 0.obs;
+
+  @override
+  void onInit() {
+    debounce(
+      connectionMonitor00,
+      (_) {
+        debugPrint('[HandcuffInfo] 첫번째 수갑과의 연결이 종료됨(60초 대기)');
+        getHandcuffsList()[0].isHandcuffConnected = false;
+        getHandcuffsList()[0].gpsStatus = GpsStatus.disconnected;
+        getHandcuffsList()[0].batteryLevel = BatteryLevel.unknown;
+        getHandcuffsList()[0].handcuffStatus = HandcuffStatus.normal;
+        --numberOfConnectedHandcuffs;
+        update();
+      },
+      time: const Duration(seconds: 60),
+    );
+
+    debounce(
+      connectionMonitor01,
+      (_) {
+        debugPrint('[HandcuffInfo] 두번째 수갑과의 연결이 종료됨(60초 대기)');
+        getHandcuffsList()[1].isHandcuffConnected = false;
+        getHandcuffsList()[1].gpsStatus = GpsStatus.disconnected;
+        getHandcuffsList()[1].batteryLevel = BatteryLevel.unknown;
+        getHandcuffsList()[1].handcuffStatus = HandcuffStatus.normal;
+        --numberOfConnectedHandcuffs;
+        update();
+      },
+      time: const Duration(seconds: 60),
+    );
+
+    debounce(
+      connectionMonitor02,
+      (_) {
+        debugPrint('[HandcuffInfo] 세번째 수갑과의 연결이 종료됨(60초 대기)');
+        getHandcuffsList()[2].isHandcuffConnected = false;
+        getHandcuffsList()[2].gpsStatus = GpsStatus.disconnected;
+        getHandcuffsList()[2].batteryLevel = BatteryLevel.unknown;
+        getHandcuffsList()[2].handcuffStatus = HandcuffStatus.normal;
+        --numberOfConnectedHandcuffs;
+        update();
+      },
+      time: const Duration(seconds: 60),
+    );
+  }
+
+  void checkEachConnection(int index) {
+    switch (index) {
+      case 0:
+        connectionMonitor00.value++;
+        break;
+      case 1:
+        connectionMonitor01.value++;
+        break;
+      case 2:
+        connectionMonitor02.value++;
+        break;
+      default:
+    }
+
+    debugPrint(
+        '[HandcuffInfo] connectionMonitor0$index = connectionMonitor0$index');
+  }
+
+  // void checkConnection(String serialNumber) {
+  //   int num = connectionMonitor[serialNumber]!;
+  //   connectionMonitor[serialNumber] = ++num;
+  //
+  //   debugPrint('[HandcuffInfo] connectionMonitor[$serialNumber] = ${connectionMonitor[serialNumber]}');
+  // }
+
   void makeHandcuffsFromPref() async {
     var key = "SerialNumberList";
     SharedPreferences pref = await SharedPreferences.getInstance();
@@ -76,6 +150,8 @@ class HandcuffInfo extends GetxController {
     _handcuffs[serialNumber] = handcuff;
     numberOfHandcuffs++;
 
+    // connectionMonitor[serialNumber] = 0; // 연결 모니터링 맵에 추가ㅇㄹ
+
     debugPrint('_handcuffs is added => $_handcuffs');
 
     // 임시로 pref에 저장
@@ -87,6 +163,8 @@ class HandcuffInfo extends GetxController {
   void removeHandcuff(String serialNumber) {
     _handcuffs.remove(serialNumber);
     numberOfHandcuffs--;
+
+    // connectionMonitor.remove(serialNumber); // 연결 모니터링 맵에서 삭제
 
     debugPrint('_handcuffs is removed => $_handcuffs');
 
