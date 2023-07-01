@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:police/restapi/RestClient.dart';
 
 import '../config/palette.dart';
 import 'package:dio/dio.dart';
@@ -24,6 +25,16 @@ class _SignupScreenState extends State<SignupScreen> {
   String userPasswordConfirm = '';
   TextEditingController userPasswordController = TextEditingController();
   TextEditingController userPasswordConfirmController = TextEditingController();
+
+  late RestClient restClient;
+
+  @override
+  void initState() {
+    Dio dio = Dio();
+    restClient = RestClient(dio);
+
+    super.initState();
+  }
 
   void _validationCheck() {
     final isValid = _formKey.currentState!.validate();
@@ -323,26 +334,49 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: GestureDetector(
                         onTap: () {
                           if (_formKey.currentState!.validate()) {
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(builder: (context) {
-                            //     return MainPageScreen();
-                            //   }),
-                            // );
-                            // Navigator.pop(context);
-                            Get.back();
-                          } else {
-                            // ScaffoldMessenger.of(context)
-                            //     .showSnackBar(const SnackBar(
-                            //   content: Text(
-                            //     '입력값을 확인해주세요!',
-                            //     textAlign: TextAlign.center,
-                            //     style: TextStyle(
-                            //       color: Colors.white,
-                            //     ),
-                            //   ),
-                            //   backgroundColor: Colors.blue,
-                            // ));
+                            // Future.microtask(() async {
+                            RegisterUserRequest registerUserRequest =
+                                RegisterUserRequest(
+                                    user_id: userId, user_pw: userPassword);
+                            // final resp = await restClient
+                            //     .registerUser(registerUserRequest);
+                            // debugPrint('[signup] ${resp.success}');
+                            //
+                            restClient
+                                .registerUser(registerUserRequest)
+                                .then((value) {
+                              if (value.success != null &&
+                                  value.success == true) {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(const SnackBar(
+                                  content: Text(
+                                    '관리자가 등록되었습니다.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  backgroundColor: Colors.blue,
+                                ));
+                                Get.back();
+                              } else {
+                                debugPrint('EXCEPTION ***********');
+                              }
+                            }).catchError((Object obj) {
+                              debugPrint('EXCEPTION =========');
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(const SnackBar(
+                                content: Text(
+                                  '등록을 실패했습니다.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                backgroundColor: Colors.blue,
+                              ));
+                              // });
+                            });
                           }
                         },
                         child: Container(

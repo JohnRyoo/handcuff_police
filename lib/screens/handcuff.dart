@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -8,6 +9,7 @@ import 'package:police/service/guardInfo.dart';
 
 import '../config/palette.dart';
 import '../mqtt/state/MQTTAppState.dart';
+import '../restapi/RestClient.dart';
 import '../service/handcuffInfo.dart';
 
 class HandcuffScreen extends StatefulWidget {
@@ -36,6 +38,16 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
   // String userId = Get.arguments;
 
   late double originalHeight;
+
+  late RestClient restClient;
+
+  @override
+  void initState() {
+    Dio dio = Dio();
+    restClient = RestClient(dio);
+
+    super.initState();
+  }
 
   void _validationCheck() {
     final isValid = _formKey.currentState!.validate();
@@ -284,15 +296,48 @@ class _HandcuffScreenState extends State<HandcuffScreen> {
                       GestureDetector(
                         onTap: () {
                           if (_formKey.currentState!.validate()) {
-                            if (!_handcuffInfo.isAlreadyRegistered(serialNumber)) {
-                              // 임시 수갑 정보 추가
-                              _handcuffInfo.addHandcuff(serialNumber);
-                              // 등록된 수갑의 serial 번호로 subscription
-                              _mqttManager.subscribe(serialNumber);
-                              Get.back();
-                            } else {
-                              _showToast('이미 등록된 수갑입니다!');
-                            }
+                            // if (!_handcuffInfo.isAlreadyRegistered(serialNumber)) {
+                            //   // 임시 수갑 정보 추가
+                            //   _handcuffInfo.addHandcuff(serialNumber);
+                            //   // 등록된 수갑의 serial 번호로 subscription
+                            //   _mqttManager.subscribe(serialNumber);
+                            //   Get.back();
+                            // } else {
+                            //   _showToast('이미 등록된 수갑입니다!');
+                            // }
+
+                            debugPrint('EXCEPTION ***********_______________');
+                            RegisterHandcuffRequest registerHandcuffRequest =
+                            RegisterHandcuffRequest(
+                                user_id: _guardInfo.id, handcuff_id: serialNumber);
+                            restClient
+                                .registerHandcuff(registerHandcuffRequest)
+                                .then((value) {
+                              if (value.success != null && value.success == true) {
+                                  _handcuffInfo.addHandcuff(serialNumber);
+                                  // 등록된 수갑의 serial 번호로 subscription
+                                  _mqttManager.subscribe(serialNumber);
+                                  Get.back();
+                              } else {
+                                debugPrint('EXCEPTION ***********');
+                              }
+                            }).catchError((Object obj) {
+                              setState(() {
+
+                              });
+                              debugPrint('EXCEPTION =========');
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(const SnackBar(
+                                content: Text(
+                                  '수갑등록에 실패했습니다.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                backgroundColor: Colors.blue,
+                              ));
+                            });
                           } else {
                             // ScaffoldMessenger.of(context)
                             //     .showSnackBar(const SnackBar(

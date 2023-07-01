@@ -106,7 +106,7 @@ class HandcuffInfo extends GetxController {
   }
 
   HandcuffInfo() {
-    makeHandcuffsFromPref();
+    // makeHandcuffsFromPref();
   }
 
   int getNumberOfHandcuffs() {
@@ -155,7 +155,7 @@ class HandcuffInfo extends GetxController {
     debugPrint('_handcuffs is added => $_handcuffs');
 
     // 임시로 pref에 저장
-    saveSerialNumberAtPref(serialNumber);
+    // saveSerialNumberAtPref(serialNumber);
 
     // update();
   }
@@ -169,7 +169,7 @@ class HandcuffInfo extends GetxController {
     debugPrint('_handcuffs is removed => $_handcuffs');
 
     // 임시로 저장된 pref에서 제거
-    removeSerialNumberAtPref(serialNumber);
+    // removeSerialNumberAtPref(serialNumber);
 
     // update();
   }

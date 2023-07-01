@@ -8,20 +8,20 @@ part of 'RestClient.dart';
 
 RegisterUserRequest _$RegisterUserRequestFromJson(Map<String, dynamic> json) =>
     RegisterUserRequest(
-      userId: json['userId'] as String?,
-      userPw: json['userPw'] as String?,
+      user_id: json['user_id'] as String?,
+      user_pw: json['user_pw'] as String?,
     );
 
 Map<String, dynamic> _$RegisterUserRequestToJson(
         RegisterUserRequest instance) =>
     <String, dynamic>{
-      'userId': instance.userId,
-      'userPw': instance.userPw,
+      'user_id': instance.user_id,
+      'user_pw': instance.user_pw,
     };
 
 NormalResponse _$NormalResponseFromJson(Map<String, dynamic> json) =>
     NormalResponse(
-      success: json['success'] as String?,
+      success: json['success'] as bool?,
       message: json['message'] as String?,
     );
 
@@ -29,6 +29,59 @@ Map<String, dynamic> _$NormalResponseToJson(NormalResponse instance) =>
     <String, dynamic>{
       'success': instance.success,
       'message': instance.message,
+    };
+
+LoginRequest _$LoginRequestFromJson(Map<String, dynamic> json) => LoginRequest(
+      user_id: json['user_id'] as String?,
+      user_pw: json['user_pw'] as String?,
+    );
+
+Map<String, dynamic> _$LoginRequestToJson(LoginRequest instance) =>
+    <String, dynamic>{
+      'user_id': instance.user_id,
+      'user_pw': instance.user_pw,
+    };
+
+LoginResponse _$LoginResponseFromJson(Map<String, dynamic> json) =>
+    LoginResponse(
+      success: json['success'] as bool?,
+      handcuff_list: (json['handcuff_list'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+    );
+
+Map<String, dynamic> _$LoginResponseToJson(LoginResponse instance) =>
+    <String, dynamic>{
+      'success': instance.success,
+      'handcuff_list': instance.handcuff_list,
+    };
+
+DeleteHandcuffRequest _$DeleteHandcuffRequestFromJson(
+        Map<String, dynamic> json) =>
+    DeleteHandcuffRequest(
+      user_id: json['user_id'] as String?,
+      handcuff_id: json['handcuff_id'] as String?,
+    );
+
+Map<String, dynamic> _$DeleteHandcuffRequestToJson(
+        DeleteHandcuffRequest instance) =>
+    <String, dynamic>{
+      'user_id': instance.user_id,
+      'handcuff_id': instance.handcuff_id,
+    };
+
+RegisterHandcuffRequest _$RegisterHandcuffRequestFromJson(
+        Map<String, dynamic> json) =>
+    RegisterHandcuffRequest(
+      user_id: json['user_id'] as String?,
+      handcuff_id: json['handcuff_id'] as String?,
+    );
+
+Map<String, dynamic> _$RegisterHandcuffRequestToJson(
+        RegisterHandcuffRequest instance) =>
+    <String, dynamic>{
+      'user_id': instance.user_id,
+      'handcuff_id': instance.handcuff_id,
     };
 
 // **************************************************************************
@@ -42,7 +95,8 @@ class _RestClient implements RestClient {
     this._dio, {
     this.baseUrl,
   }) {
-    baseUrl ??= 'https://a4536928-1969-4082-9ecd-815cec5e875b.mock.pstmn.io';
+    baseUrl ??=
+        'https://2c25d682-e824-4c99-9825-236ff000722a.mock.pstmn.io/smartHandcuff';
   }
 
   final Dio _dio;
@@ -65,7 +119,81 @@ class _RestClient implements RestClient {
     )
             .compose(
               _dio.options,
-              '/smartHandcuff/regUser',
+              '/regUser',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = NormalResponse.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<LoginResponse> login(LoginRequest loginRequest) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(loginRequest.toJson());
+    final _result = await _dio
+        .fetch<Map<String, dynamic>>(_setStreamType<LoginResponse>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              '/login',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = LoginResponse.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<NormalResponse> deleteHandcuff(
+      DeleteHandcuffRequest deleteHandcuffRequest) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(deleteHandcuffRequest.toJson());
+    final _result = await _dio
+        .fetch<Map<String, dynamic>>(_setStreamType<NormalResponse>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              '/delHandcuff',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = NormalResponse.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<NormalResponse> registerHandcuff(
+      RegisterHandcuffRequest registerHandcuffRequest) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(registerHandcuffRequest.toJson());
+    final _result = await _dio
+        .fetch<Map<String, dynamic>>(_setStreamType<NormalResponse>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              '/regHandcuff',
               queryParameters: queryParameters,
               data: _data,
             )

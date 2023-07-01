@@ -1,11 +1,14 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 // import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:police/service/guardInfo.dart';
 import 'package:police/service/handcuffInfo.dart';
 import '../../../config/palette.dart';
 import '../../../mqtt/MQTTManager.dart';
+import '../../../restapi/RestClient.dart';
 import '../../map_screen.dart';
 
 class MainPageStatus extends StatefulWidget {
@@ -19,9 +22,20 @@ class MainPageStatus extends StatefulWidget {
 
 class _MainPageStatusState extends State<MainPageStatus> {
   final HandcuffInfo _handcuffInfo = Get.find();
+  final GuardInfo _guardInfo = Get.find();
 
   late GpsStatus gpsStatusFromMqtt;
   late RxMap<String, Handcuff> _handcuffsMap;
+
+  late RestClient restClient;
+
+  @override
+  void initState() {
+    Dio dio = Dio();
+    restClient = RestClient(dio);
+
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,9 +105,35 @@ class _MainPageStatusState extends State<MainPageStatus> {
                   },
                   onDismissed: (direction) {
                     if (direction == DismissDirection.startToEnd) {
-                      setState(() {
-                        _handcuffInfo.removeHandcuff(key);
-                        debugPrint('_handcuffsMap = $_handcuffsMap');
+                      DeleteHandcuffRequest deleteHandcuffRequest =
+                          DeleteHandcuffRequest(
+                              user_id: _guardInfo.id, handcuff_id: key);
+                      restClient
+                          .deleteHandcuff(deleteHandcuffRequest)
+                          .then((value) {
+                        if (value.success != null && value.success == true) {
+                          _handcuffInfo.removeHandcuff(key);
+                          debugPrint(
+                              '[main_page_status] _handcuffsMap = $_handcuffsMap');
+                        } else {
+                          debugPrint('EXCEPTION ***********');
+                        }
+                      }).catchError((Object obj) {
+                        setState(() {
+
+                        });
+                        debugPrint('EXCEPTION =========');
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(const SnackBar(
+                          content: Text(
+                            '삭제에 실패했습니다.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                          backgroundColor: Colors.blue,
+                        ));
                       });
                     }
                   },
@@ -163,7 +203,7 @@ class _MainPageStatusState extends State<MainPageStatus> {
                                 SizedBox(
                                   width: 60,
                                   child: Text(
-                                      (index+1).toString().padLeft(2, '0'),
+                                    (index + 1).toString().padLeft(2, '0'),
                                     style: GoogleFonts.notoSans(
                                       textStyle: TextStyle(
                                         color: _handcuffsMap[key]!
@@ -256,7 +296,7 @@ class _MainPageStatusState extends State<MainPageStatus> {
                                         'serialNumber':
                                             _handcuffsMap[key]!.serialNumber,
                                         'mqttManager': widget.mqttManager,
-                                        'index': index+1,
+                                        'index': index + 1,
                                       });
                                     }
                                   },

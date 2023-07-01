@@ -1,9 +1,12 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:police/service/guardInfo.dart';
+import 'package:police/service/handcuffInfo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/palette.dart';
+import '../restapi/RestClient.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -16,9 +19,20 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
   GuardInfo guardInfo = Get.find();
+  HandcuffInfo handcuffInfo = Get.find();
 
   String userId = '';
   String userPassword = '';
+
+  late RestClient restClient;
+
+  @override
+  void initState() {
+    Dio dio = Dio();
+    restClient = RestClient(dio);
+
+    super.initState();
+  }
 
   void _validationCheck() {
     final isValid = _formKey.currentState!.validate();
@@ -239,19 +253,49 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: GestureDetector(
                         onTap: () async {
                           if (_formKey.currentState!.validate()) {
-                            // Navigator.pushReplacement(
-                            //   context,
-                            //   MaterialPageRoute(builder: (context) {
-                            //     return MainPageScreen();
-                            //   }),
-                            // );
-                            SharedPreferences pref =
-                                await SharedPreferences.getInstance();
-                            List<String>? handcuffList =
-                                pref.getStringList("HandcuffList") ?? []; // null 인 경우 []
+                            // SharedPreferences pref =
+                            //     await SharedPreferences.getInstance();
+                            // List<String>? handcuffList =
+                            //     pref.getStringList("HandcuffList") ?? []; // null 인 경우 []
+                            // guardInfo.id = userId;
+                            // Get.offNamed("/mainpage", arguments: userId);
+                            LoginRequest loginRequest =
+                            LoginRequest(
+                                    user_id: userId, user_pw: userPassword);
+                            restClient
+                                .login(loginRequest)
+                                .then((value) {
+                              if (value.success != null &&
+                                  value.success == true) {
 
-                            guardInfo.id = userId;
-                            Get.offNamed("/mainpage", arguments: userId);
+                                guardInfo.id = userId;
+
+                                // var key = "SerialNumberList";
+                                // SharedPreferences pref = await SharedPreferences.getInstance();
+                                List<String> serialNumberList =value.handcuff_list ?? [];
+
+                                for (var serialNumber in serialNumberList) {
+                                  handcuffInfo.addHandcuff(serialNumber);
+                                }
+
+                                Get.offNamed("/mainpage", arguments: userId);
+                              } else {
+                                debugPrint('EXCEPTION ***********');
+                              }
+                            }).catchError((Object obj) {
+                              debugPrint('EXCEPTION =========');
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(const SnackBar(
+                                content: Text(
+                                  '로그인을 실패했습니다.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                backgroundColor: Colors.blue,
+                              ));
+                            });
                           } else {
                             // ScaffoldMessenger.of(context)
                             //     .showSnackBar(const SnackBar(
