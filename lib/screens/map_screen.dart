@@ -425,9 +425,11 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
 
   Future<void> _displayMyPosition() async {
     final GoogleMapController controller = await _controller.future;
+    debugPrint('[map_screen] _displayMyPosition : _currentZoomValue = $_currentZoomValue');
     controller.animateCamera(
-      CameraUpdate.newLatLng(
+      CameraUpdate.newLatLngZoom(
         LatLng(currentLocation!.latitude!, currentLocation!.longitude!),
+        _currentZoomValue,
       ),
     );
     focusedPosition = FocusedPosition.police;
@@ -435,9 +437,11 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
 
   Future<void> _displayHandcuffPosition() async {
     final GoogleMapController controller = await _controller.future;
+    debugPrint('[map_screen] _displayHandcuffPosition : _currentZoomValue = $_currentZoomValue');
     controller.animateCamera(
-      CameraUpdate.newLatLng(
+      CameraUpdate.newLatLngZoom(
         _handcuffInfo.getHandcuff(serialNumber).lastLocation,
+        _currentZoomValue,
       ),
     );
     focusedPosition = FocusedPosition.handcuff;
