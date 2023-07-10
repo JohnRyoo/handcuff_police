@@ -32,7 +32,8 @@ class _MainPageScreenState extends State<MainPageScreen> {
   void mqttConnect(String topic) {
     var randomId = Random().nextInt(1000) + 1;
     manager = MQTTManager(
-        host: "13.124.88.113",
+        host: "1.218.138.147",
+        // host: "13.124.88.113",
         // host: "192.168.0.7",
         topic: topic,
         identifier: 'CJS_HandcuffTest_$randomId',
