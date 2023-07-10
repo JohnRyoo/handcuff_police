@@ -53,6 +53,7 @@ dependencies:
   retrofit: '>=4.0.0 <5.0.0'
   logger: any  #for logging purpose
   json_annotation: ^4.8.1
+  change_app_package_name: ^1.1.0
 
 dev_dependencies:
   flutter_test:
