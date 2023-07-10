@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 
 part 'RestClient.g.dart';
 
-@RestApi(baseUrl: "https://2c25d682-e824-4c99-9825-236ff000722a.mock.pstmn.io/smartHandcuff")
+@RestApi(baseUrl: "http://15.165.14.183:8088/smartHandcuff")
 abstract class RestClient {
   factory RestClient(Dio dio, {String baseUrl}) = _RestClient;
 
@@ -70,9 +70,9 @@ class LoginRequest {
 @JsonSerializable()
 class LoginResponse {
   bool? success;
-  List<String>? handcuff_list;
+  List<String>? handcuff_id_list;
 
-  LoginResponse({required this.success, required this.handcuff_list});
+  LoginResponse({required this.success, required this.handcuff_id_list});
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) =>
       _$LoginResponseFromJson(json);

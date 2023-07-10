@@ -272,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                 // var key = "SerialNumberList";
                                 // SharedPreferences pref = await SharedPreferences.getInstance();
-                                List<String> serialNumberList =value.handcuff_list ?? [];
+                                List<String> serialNumberList = value.handcuff_id_list ?? [];
 
                                 for (var serialNumber in serialNumberList) {
                                   handcuffInfo.addHandcuff(serialNumber);
