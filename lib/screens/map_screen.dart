@@ -257,7 +257,7 @@ class _HandcuffOnMapState extends State<HandcuffOnMap> {
                       width: 7,
                     )
                   },
-                  zoomControlsEnabled: true,
+                  zoomControlsEnabled: false,
                   mapType: MapType.normal,
                   myLocationEnabled: false,
                   myLocationButtonEnabled: false,
